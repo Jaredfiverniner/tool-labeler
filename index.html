@@ -49,9 +49,9 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
 #preview-wrap{display:none;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:#000;position:relative}
 #preview-wrap canvas{width:100%;height:auto;display:block}
 .preview-label{position:absolute;top:8px;left:8px;font-size:.6rem;letter-spacing:.15em;color:var(--dim);background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px}
-.batch-progress{background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:14px;text-align:center;display:none}
-.batch-progress .prog-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:.15em}
-.batch-progress .prog-sub{font-size:.7rem;color:var(--dim);margin-top:4px;letter-spacing:.1em}
+.prog-wrap{background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:14px;text-align:center;display:none}
+.prog-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:.15em}
+.prog-sub{font-size:.7rem;color:var(--dim);margin-top:4px;letter-spacing:.1em}
 .progress-bar-wrap{background:#131720;border-radius:4px;height:6px;margin-top:10px;overflow:hidden}
 .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .3s}
 .btn{width:100%;padding:14px;border:none;border-radius:5px;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.2em;cursor:pointer;transition:all .2s}
@@ -62,14 +62,13 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
 .btn-secondary:hover{border-color:var(--accent);color:var(--text)}
 .save-note{font-size:.65rem;color:var(--dim);text-align:center;letter-spacing:.05em;line-height:1.6}
 .save-note span{color:var(--accent)}
-.batch-queue{display:flex;flex-direction:column;gap:8px}
+.batch-queue{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .queue-item{background:#131720;border:1px solid var(--border);border-radius:4px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;font-size:.75rem}
-.queue-item .qi-name{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.queue-item .qi-badge{color:var(--accent);font-size:.65rem;letter-spacing:.1em;white-space:nowrap}
+.queue-item .qi-name{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.queue-item .qi-badge{color:var(--accent);font-size:.65rem;letter-spacing:.1em;white-space:nowrap;margin:0 6px}
 .queue-item .qi-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;padding:0 4px}
 .queue-item .qi-del:hover{color:#ff4444}
 .hidden{display:none}
-.offline-badge{display:none;background:rgba(240,165,0,.15);border:1px solid var(--accent);border-radius:4px;padding:4px 10px;font-size:.6rem;letter-spacing:.15em;color:var(--accent);text-align:center}
 </style>
 </head>
 <body>
@@ -79,13 +78,11 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
 </header>
 <div class="container">
 
-  <div class="offline-badge" id="offlineBadge">OFFLINE MODE - FULLY CACHED</div>
-
   <div class="panel">
     <div class="panel-title">Mode</div>
     <div class="mode-tabs">
       <button class="mode-btn active" id="modeSingle">Single Photo</button>
-      <button class="mode-btn" id="modeBatch">Batch Group</button>
+      <button class="mode-btn" id="modeBatch">Batch Collage</button>
     </div>
   </div>
 
@@ -153,6 +150,7 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
     </div>
   </div>
 
+  <!-- Single upload -->
   <div id="singleUpload">
     <div class="upload-zone">
       <input type="file" accept="image/*" id="fileInput">
@@ -164,6 +162,7 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
     </div>
   </div>
 
+  <!-- Batch upload -->
   <div id="batchUpload" class="hidden">
     <div class="upload-zone">
       <input type="file" accept="image/*" id="batchFileInput" multiple>
@@ -173,16 +172,18 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
         <span id="batchAddHint">Select up to 20 photos</span>
       </div>
     </div>
-    <div id="batchQueue" class="batch-queue" style="margin-top:12px"></div>
+    <div id="batchQueue" class="batch-queue"></div>
   </div>
 
+  <!-- Single preview -->
   <div id="preview-wrap">
     <canvas id="canvas"></canvas>
     <div class="preview-label">PREVIEW</div>
   </div>
 
-  <div class="batch-progress" id="batchProgress">
-    <div class="prog-title" id="progTitle">Processing...</div>
+  <!-- Progress -->
+  <div class="prog-wrap" id="progWrap">
+    <div class="prog-title" id="progTitle">Building collage...</div>
     <div class="prog-sub" id="progSub"></div>
     <div class="progress-bar-wrap">
       <div class="progress-bar" id="progressBar" style="width:0%"></div>
@@ -196,22 +197,13 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
   </div>
 
 </div>
+
 <canvas id="offscreen" style="display:none"></canvas>
 
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/tool-labeler/sw.js').then(function() {
-    if (!navigator.onLine) {
-      document.getElementById('offlineBadge').style.display = 'block';
-    }
-  });
+  navigator.serviceWorker.register('/tool-labeler/sw.js');
 }
-window.addEventListener('offline', function() {
-  document.getElementById('offlineBadge').style.display = 'block';
-});
-window.addEventListener('online', function() {
-  document.getElementById('offlineBadge').style.display = 'none';
-});
 
 var mode = 'single';
 var imgEl = null;
@@ -239,7 +231,10 @@ function setMode(m) {
   document.getElementById('batchCountWrap').classList.toggle('hidden', m !== 'batch');
   document.getElementById('preview-wrap').style.display = 'none';
   document.getElementById('saveBtn').disabled = true;
-  document.getElementById('saveBtn').textContent = m === 'batch' ? 'SAVE ALL LABELED PHOTOS' : 'SAVE LABELED PHOTO';
+  document.getElementById('saveBtn').textContent = m === 'batch' ? 'BUILD + SAVE COLLAGE' : 'SAVE LABELED PHOTO';
+  document.getElementById('saveNote').innerHTML = m === 'single'
+    ? 'Tap Save -> image opens in new tab -> <span>long-press -> Save to Photos</span>'
+    : 'All photos stitched into ONE image -> <span>long-press -> Save to Photos</span>';
   updateBatchBtn();
 }
 
@@ -281,7 +276,7 @@ function renderBatchQueue() {
     var div = document.createElement('div');
     div.className = 'queue-item';
     div.innerHTML = '<span class="qi-name">' + f.name + '</span>'
-      + '<span class="qi-badge">' + groupName + ' - ' + (i+1) + ' of ' + total + '</span>'
+      + '<span class="qi-badge">' + groupName + ' ' + (i+1) + '/' + total + '</span>'
       + '<button class="qi-del" data-idx="' + i + '">x</button>';
     container.appendChild(div);
   });
@@ -307,7 +302,6 @@ function updateBatchBtn() {
     if (mode === 'batch') renderBatchQueue();
   });
 });
-
 document.getElementById('batchCount').addEventListener('input', renderBatchQueue);
 
 document.querySelectorAll('.pos-btn').forEach(function(btn) {
@@ -347,24 +341,26 @@ function getTimestamp() {
 
 function drawLabel(dc, W, H, lines) {
   var fs = Math.round(W * (fontSize / 1000));
+  if (fs < 8) fs = 8;
   dc.font = 'bold ' + fs + 'px monospace';
-  var lineH = fs * 1.35, pad = fs * 0.6;
+  var lineH = fs * 1.35, pad = fs * 0.5;
   var totalH = lines.length * lineH + pad * 2;
   var maxW = Math.max.apply(null, lines.map(function(l) { return dc.measureText(l.text).width; })) + pad * 2;
+  if (maxW > W * 0.98) maxW = W * 0.98;
   var x, textAlign;
-  var margin = fs * 0.4;
+  var margin = fs * 0.3;
   if (labelPos.includes('left')) { x = margin; textAlign = 'left'; }
   else if (labelPos.includes('right')) { x = W - margin; textAlign = 'right'; }
   else { x = W / 2; textAlign = 'center'; }
-  var boxX = textAlign === 'left' ? margin - pad * 0.5
-    : textAlign === 'right' ? W - margin - maxW + pad * 0.5
+  var boxX = textAlign === 'left' ? margin - pad * 0.3
+    : textAlign === 'right' ? W - margin - maxW + pad * 0.3
     : (W - maxW) / 2;
   var y = labelPos.includes('top') ? margin : H - totalH - margin;
   dc.save();
   dc.globalAlpha = bgOpacity;
   dc.fillStyle = '#000';
   dc.beginPath();
-  var r = fs * 0.3;
+  var r = fs * 0.25;
   dc.moveTo(boxX+r,y); dc.lineTo(boxX+maxW-r,y);
   dc.quadraticCurveTo(boxX+maxW,y,boxX+maxW,y+r);
   dc.lineTo(boxX+maxW,y+totalH-r);
@@ -391,7 +387,7 @@ function drawLabel(dc, W, H, lines) {
       dc.fillStyle = '#aaaaaa';
     }
     dc.shadowColor = 'rgba(0,0,0,0.9)';
-    dc.shadowBlur = 4;
+    dc.shadowBlur = 3;
     dc.fillText(line.text, x, ty);
     dc.shadowBlur = 0;
   });
@@ -419,6 +415,18 @@ function render() {
   ctx.drawImage(offscreen, 0, 0);
 }
 
+function loadImage(file) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() { resolve(img); };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function saveSingle() {
   if (!imgEl) return;
   render();
@@ -427,57 +435,119 @@ function saveSingle() {
   }, 'image/jpeg', 0.95);
 }
 
-function saveBatch() {
+function saveCollage() {
   if (batchFiles.length === 0) return;
   var total = parseInt(document.getElementById('batchCount').value) || batchFiles.length;
   var groupName = document.getElementById('mainLabel').value.trim() || 'Photo';
-  var prog = document.getElementById('batchProgress');
+  var progWrap = document.getElementById('progWrap');
   var progTitle = document.getElementById('progTitle');
   var progSub = document.getElementById('progSub');
   var bar = document.getElementById('progressBar');
-  prog.style.display = 'block';
+  progWrap.style.display = 'block';
   document.getElementById('saveBtn').disabled = true;
+  progTitle.textContent = 'LOADING PHOTOS...';
 
-  var i = 0;
-  function processNext() {
-    if (i >= batchFiles.length) {
-      progTitle.textContent = 'ALL DONE!';
-      progSub.textContent = batchFiles.length + ' photos - long-press each tab to save';
-      bar.style.width = '100%';
-      document.getElementById('saveBtn').disabled = false;
-      return;
+  // Load all images first
+  var promises = batchFiles.map(function(f) { return loadImage(f); });
+  Promise.all(promises).then(function(images) {
+    progTitle.textContent = 'BUILDING COLLAGE...';
+
+    var cols = 2;
+    var cellW = 1080; // each cell width in pixels
+    var gap = 12;
+
+    // Draw each image into a temp canvas to get labeled version
+    var labeled = images.map(function(img, i) {
+      var num = i + 1;
+      // Scale image to cellW keeping aspect ratio
+      var scale = cellW / img.naturalWidth;
+      var cellH = Math.round(img.naturalHeight * scale);
+      var tc = document.createElement('canvas');
+      tc.width = cellW;
+      tc.height = cellH;
+      var tctx = tc.getContext('2d');
+      tctx.drawImage(img, 0, 0, cellW, cellH);
+      var mainText = groupName + ' - ' + num + ' of ' + total;
+      var lines = buildLines(mainText);
+      if (lines.length) drawLabel(tctx, cellW, cellH, lines);
+      bar.style.width = (((i+1) / images.length) * 60) + '%';
+      progSub.textContent = 'Labeled ' + num + ' of ' + images.length;
+      return {canvas: tc, w: cellW, h: cellH};
+    });
+
+    // Build grid layout
+    var rows = [];
+    var i = 0;
+    while (i < labeled.length) {
+      if (i === labeled.length - 1 && labeled.length % 2 !== 0) {
+        // Last odd item - full width row
+        rows.push([labeled[i]]);
+        i++;
+      } else {
+        rows.push([labeled[i], labeled[i+1]]);
+        i += 2;
+      }
     }
-    var file = batchFiles[i];
-    var num = i + 1;
-    progTitle.textContent = 'SAVING ' + num + ' OF ' + batchFiles.length;
-    progSub.textContent = file.name;
-    bar.style.width = ((num / batchFiles.length) * 100) + '%';
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      var img = new Image();
-      img.onload = function() {
-        var W = img.naturalWidth, H = img.naturalHeight;
-        offscreen.width = W; offscreen.height = H;
-        octx.drawImage(img, 0, 0, W, H);
-        var mainText = groupName + ' - ' + num + ' of ' + total;
-        var lines = buildLines(mainText);
-        if (lines.length) drawLabel(octx, W, H, lines);
-        offscreen.toBlob(function(blob) {
-          window.open(URL.createObjectURL(blob), '_blank');
-          i++;
-          setTimeout(processNext, 700);
-        }, 'image/jpeg', 0.95);
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-  processNext();
+
+    var totalW = cellW * cols + gap;
+    var totalH = gap;
+    rows.forEach(function(row) {
+      var maxH = Math.max.apply(null, row.map(function(c) { return c.h; }));
+      totalH += maxH + gap;
+    });
+
+    // Add header bar height
+    var headerH = 80;
+    totalH += headerH;
+
+    var collage = document.createElement('canvas');
+    collage.width = totalW;
+    collage.height = totalH;
+    var cctx = collage.getContext('2d');
+
+    // Background
+    cctx.fillStyle = '#111827';
+    cctx.fillRect(0, 0, totalW, totalH);
+
+    // Header
+    cctx.fillStyle = '#f0a500';
+    cctx.font = 'bold ' + Math.round(headerH * 0.45) + 'px monospace';
+    cctx.textAlign = 'center';
+    cctx.textBaseline = 'middle';
+    cctx.fillText(groupName.toUpperCase() + '  -  ' + images.length + ' PHOTOS  -  ' + getTimestamp(), totalW/2, headerH/2);
+
+    // Place images
+    var yOff = headerH + gap;
+    rows.forEach(function(row) {
+      var maxH = Math.max.apply(null, row.map(function(c) { return c.h; }));
+      if (row.length === 1) {
+        // Center single item
+        var xOff = Math.round((totalW - row[0].w) / 2);
+        cctx.drawImage(row[0].canvas, xOff, yOff);
+      } else {
+        var xOff = 0;
+        row.forEach(function(cell) {
+          cctx.drawImage(cell.canvas, xOff, yOff);
+          xOff += cell.w + gap;
+        });
+      }
+      yOff += maxH + gap;
+    });
+
+    bar.style.width = '100%';
+    progTitle.textContent = 'COLLAGE READY!';
+    progSub.textContent = 'Opening image - long-press to save';
+
+    collage.toBlob(function(blob) {
+      window.open(URL.createObjectURL(blob), '_blank');
+      document.getElementById('saveBtn').disabled = false;
+    }, 'image/jpeg', 0.92);
+  });
 }
 
 document.getElementById('saveBtn').addEventListener('click', function() {
   if (mode === 'single') saveSingle();
-  else saveBatch();
+  else saveCollage();
 });
 
 document.getElementById('resetBtn').addEventListener('click', function() {
@@ -490,8 +560,9 @@ document.getElementById('resetBtn').addEventListener('click', function() {
   document.getElementById('mainLabel').value = '';
   document.getElementById('subLabel').value = '';
   document.getElementById('batchQueue').innerHTML = '';
-  document.getElementById('batchProgress').style.display = 'none';
+  document.getElementById('progWrap').style.display = 'none';
   document.getElementById('batchAddHint').textContent = 'Select up to 20 photos';
+  document.getElementById('progressBar').style.width = '0%';
 });
 </script>
 </body>
