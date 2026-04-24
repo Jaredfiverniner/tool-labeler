@@ -5,77 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Tool Photo Labeler</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --steel: #1a1f2e; --panel: #222838; --border: #2e3650;
-    --accent: #f0a500; --accent2: #e05c00; --text: #d4dbe8; --dim: #6b7899;
-  }
-  body { background: var(--steel); color: var(--text); font-family: 'Share Tech Mono', monospace; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 0 0 40px; }
-  header { width: 100%; background: linear-gradient(135deg, #0d1017 0%, #1a1f2e 100%); border-bottom: 2px solid var(--accent); padding: 14px 20px 10px; text-align: center; }
-  h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.15em; color: var(--accent); }
-  .subtitle { font-size: 0.65rem; color: var(--dim); letter-spacing: 0.2em; margin-top: 2px; }
-  .container { width: 100%; max-width: 520px; padding: 20px 16px 0; display: flex; flex-direction: column; gap: 16px; }
-  .upload-zone { border: 2px dashed var(--border); border-radius: 6px; padding: 28px 16px; text-align: center; cursor: pointer; position: relative; background: var(--panel); }
-  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .upload-icon { font-size: 2.4rem; margin-bottom: 8px; }
-  .upload-label { font-size: 0.8rem; color: var(--dim); letter-spacing: 0.1em; }
-  .upload-label strong { color: var(--accent); display: block; font-size: 1rem; margin-bottom: 4px; }
-  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-  .panel-title { font-size: 0.65rem; letter-spacing: 0.25em; color: var(--accent); text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-  label { font-size: 0.7rem; color: var(--dim); letter-spacing: 0.1em; display: block; margin-bottom: 4px; }
-  input[type=text] { width: 100%; background: #131720; border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; padding: 10px 12px; outline: none; transition: border-color 0.2s; }
-  input[type=text]:focus { border-color: var(--accent); }
-  .position-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .pos-btn { background: #131720; border: 1px solid var(--border); border-radius: 4px; color: var(--dim); font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; padding: 8px 4px; cursor: pointer; text-align: center; transition: all 0.15s; }
-  .pos-btn.active { border-color: var(--accent); background: rgba(240,165,0,0.12); color: var(--accent); }
-  .color-row { display: flex; gap: 8px; flex-wrap: wrap; }
-  .color-swatch { width: 32px; height: 32px; border-radius: 4px; border: 2px solid transparent; cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
-  .color-swatch.active { border-color: var(--accent); transform: scale(1.15); }
-  .slider-row { display: flex; align-items: center; gap: 10px; }
-  input[type=range] { flex: 1; accent-color: var(--accent); height: 4px; }
-  .slider-val { font-size: 0.8rem; color: var(--accent); min-width: 30px; text-align: right; }
-  #preview-wrap { display: none; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: #000; position: relative; }
-  #preview-wrap canvas { width: 100%; height: auto; display: block; }
-  .preview-label { position: absolute; top: 8px; left: 8px; font-size: 0.6rem; letter-spacing: 0.15em; color: var(--dim); background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 3px; }
-  .btn { width: 100%; padding: 14px; border: none; border-radius: 5px; font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.2em; cursor: pointer; transition: all 0.2s; }
-  .btn-primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%); color: #0d1017; }
-  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--dim); font-size: 0.75rem; letter-spacing: 0.15em; padding: 10px; font-family: 'Share Tech Mono', monospace; }
-  .save-note { font-size: 0.65rem; color: var(--dim); text-align: center; letter-spacing: 0.05em; line-height: 1.5; }
-  .save-note span { color: var(--accent); }
-  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
-  .toggle { position: relative; width: 42px; height: 22px; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider { position: absolute; inset: 0; background: #131720; border: 1px solid var(--border); border-radius: 11px; cursor: pointer; transition: 0.2s; }
-  .toggle-slider::before { content: ''; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; background: var(--dim); border-radius: 50%; transition: 0.2s; }
-  .toggle input:checked + .toggle-slider { background: rgba(240,165,0,0.15); border-color: var(--accent); }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--accent); }
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--steel:#1a1f2e;--panel:#222838;--border:#2e3650;--accent:#f0a500;--accent2:#e05c00;--text:#d4dbe8;--dim:#6b7899}
+body{background:var(--steel);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:0 0 60px}
+header{width:100%;background:linear-gradient(135deg,#0d1017,#1a1f2e);border-bottom:2px solid var(--accent);padding:14px 20px 10px;text-align:center}
+h1{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.15em;color:var(--accent)}
+.subtitle{font-size:.65rem;color:var(--dim);letter-spacing:.2em;margin-top:2px}
+.container{width:100%;max-width:520px;padding:20px 16px 0;display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.panel-title{font-size:.65rem;letter-spacing:.25em;color:var(--accent);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px}
+label{font-size:.7rem;color:var(--dim);letter-spacing:.1em;display:block;margin-bottom:4px}
+input[type=text],input[type=number]{width:100%;background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.9rem;padding:10px 12px;outline:none;transition:border-color .2s}
+input[type=text]:focus,input[type=number]:focus{border-color:var(--accent)}
+.mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode-btn{background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.1em;padding:10px;cursor:pointer;text-align:center;transition:all .15s}
+.mode-btn.active{border-color:var(--accent);background:rgba(240,165,0,.12);color:var(--accent)}
+.upload-zone{border:2px dashed var(--border);border-radius:6px;padding:24px 16px;text-align:center;cursor:pointer;position:relative;background:var(--panel);transition:border-color .2s}
+.upload-zone:hover{border-color:var(--accent)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:2rem;margin-bottom:6px}
+.upload-label{font-size:.8rem;color:var(--dim);letter-spacing:.1em}
+.upload-label strong{color:var(--accent);display:block;font-size:.95rem;margin-bottom:4px}
+.position-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pos-btn{background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.1em;padding:8px 4px;cursor:pointer;text-align:center;transition:all .15s}
+.pos-btn.active{border-color:var(--accent);background:rgba(240,165,0,.12);color:var(--accent)}
+.color-row{display:flex;gap:8px;flex-wrap:wrap}
+.color-swatch{width:32px;height:32px;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s}
+.color-swatch.active{border-color:var(--accent);transform:scale(1.15)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+.slider-val{font-size:.8rem;color:var(--accent);min-width:36px;text-align:right}
+.toggle-row{display:flex;align-items:center;justify-content:space-between}
+.toggle{position:relative;width:42px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#131720;border:1px solid var(--border);border-radius:11px;cursor:pointer;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;background:var(--dim);border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:rgba(240,165,0,.15);border-color:var(--accent)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);background:var(--accent)}
+#preview-wrap{display:none;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:#000;position:relative}
+#preview-wrap canvas{width:100%;height:auto;display:block}
+.preview-label{position:absolute;top:8px;left:8px;font-size:.6rem;letter-spacing:.15em;color:var(--dim);background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px}
+.batch-progress{background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:14px;text-align:center;display:none}
+.batch-progress .prog-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:.15em}
+.batch-progress .prog-sub{font-size:.7rem;color:var(--dim);margin-top:4px;letter-spacing:.1em}
+.progress-bar-wrap{background:#131720;border-radius:4px;height:6px;margin-top:10px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .3s}
+.btn{width:100%;padding:14px;border:none;border-radius:5px;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.2em;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d1017}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-secondary{background:transparent;border:1px solid var(--border);color:var(--dim);font-size:.75rem;letter-spacing:.15em;padding:10px;font-family:'Share Tech Mono',monospace}
+.btn-secondary:hover{border-color:var(--accent);color:var(--text)}
+.save-note{font-size:.65rem;color:var(--dim);text-align:center;letter-spacing:.05em;line-height:1.6}
+.save-note span{color:var(--accent)}
+.batch-queue{display:flex;flex-direction:column;gap:8px}
+.queue-item{background:#131720;border:1px solid var(--border);border-radius:4px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;font-size:.75rem}
+.queue-item .qi-name{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.queue-item .qi-badge{color:var(--accent);font-size:.65rem;letter-spacing:.1em;white-space:nowrap}
+.queue-item .qi-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;padding:0 4px}
+.queue-item .qi-del:hover{color:#ff4444}
+.hidden{display:none}
 </style>
 </head>
 <body>
 <header>
-  <h1>⚙ Tool Photo Labeler</h1>
+  <h1>Tool Photo Labeler</h1>
   <div class="subtitle">OILFIELD DOCUMENTATION TOOL</div>
 </header>
 <div class="container">
-  <div class="upload-zone" id="uploadZone">
-    <input type="file" accept="image/*" id="fileInput">
-    <div class="upload-icon">📷</div>
-    <div class="upload-label">
-      <strong>TAP TO TAKE / CHOOSE PHOTO</strong>
-      Camera or photo library
+
+  <!-- Mode selector -->
+  <div class="panel">
+    <div class="panel-title">Mode</div>
+    <div class="mode-tabs">
+      <button class="mode-btn active" id="modeSingle">Single Photo</button>
+      <button class="mode-btn" id="modeBatch">Batch Group</button>
     </div>
   </div>
+
+  <!-- Label settings -->
   <div class="panel">
-    <div class="panel-title">Label Text</div>
+    <div class="panel-title">Label</div>
     <div>
-      <label>MAIN LABEL (tool name / ID)</label>
-      <input type="text" id="mainLabel" placeholder="e.g. MWD TOOL #3 — BHA RUN 2" autocomplete="off">
+      <label>GROUP / TOOL NAME</label>
+      <input type="text" id="mainLabel" placeholder="e.g. Blue stg 6" autocomplete="off">
     </div>
-    <div>
+    <div id="subLabelWrap">
       <label>SECONDARY LINE (optional)</label>
-      <input type="text" id="subLabel" placeholder="e.g. 9,842 FT — WELL: JONES 14H" autocomplete="off">
+      <input type="text" id="subLabel" placeholder="e.g. 9,842 FT - JONES 14H" autocomplete="off">
+    </div>
+    <div id="batchCountWrap" class="hidden">
+      <label>TOTAL PHOTOS IN GROUP</label>
+      <input type="number" id="batchCount" value="5" min="2" max="20">
     </div>
     <div class="toggle-row">
       <label style="margin:0">ADD TIMESTAMP</label>
@@ -85,21 +107,23 @@
       </label>
     </div>
   </div>
+
+  <!-- Style settings -->
   <div class="panel">
     <div class="panel-title">Label Style</div>
     <div>
       <label>POSITION</label>
       <div class="position-grid">
-        <button class="pos-btn" data-pos="top-left">↖ TOP LEFT</button>
-        <button class="pos-btn" data-pos="top-center">↑ TOP CTR</button>
-        <button class="pos-btn" data-pos="top-right">↗ TOP RIGHT</button>
-        <button class="pos-btn" data-pos="bottom-left">↙ BOT LEFT</button>
-        <button class="pos-btn active" data-pos="bottom-center">↓ BOT CTR</button>
-        <button class="pos-btn" data-pos="bottom-right">↘ BOT RIGHT</button>
+        <button class="pos-btn" data-pos="top-left">TOP LEFT</button>
+        <button class="pos-btn" data-pos="top-center">TOP CTR</button>
+        <button class="pos-btn" data-pos="top-right">TOP RIGHT</button>
+        <button class="pos-btn" data-pos="bottom-left">BOT LEFT</button>
+        <button class="pos-btn active" data-pos="bottom-center">BOT CTR</button>
+        <button class="pos-btn" data-pos="bottom-right">BOT RIGHT</button>
       </div>
     </div>
     <div>
-      <label>LABEL COLOR</label>
+      <label>COLOR</label>
       <div class="color-row">
         <div class="color-swatch active" data-color="#f0a500" style="background:#f0a500"></div>
         <div class="color-swatch" data-color="#ffffff" style="background:#ffffff"></div>
@@ -107,7 +131,7 @@
         <div class="color-swatch" data-color="#ff4444" style="background:#ff4444"></div>
         <div class="color-swatch" data-color="#44aaff" style="background:#44aaff"></div>
         <div class="color-swatch" data-color="#ffff00" style="background:#ffff00"></div>
-        <div class="color-swatch" data-color="#000000" style="background:#000;border:1px solid #555"></div>
+        <div class="color-swatch" data-color="#000000" style="background:#000;border-color:#555"></div>
       </div>
     </div>
     <div>
@@ -118,133 +142,367 @@
       </div>
     </div>
     <div>
-      <label>BACKGROUND OPACITY</label>
+      <label>BG OPACITY</label>
       <div class="slider-row">
         <input type="range" id="bgOpacity" min="0" max="100" value="65">
         <span class="slider-val" id="bgOpacityVal">65%</span>
       </div>
     </div>
   </div>
+
+  <!-- Single mode upload -->
+  <div id="singleUpload">
+    <div class="upload-zone">
+      <input type="file" accept="image/*" id="fileInput">
+      <div class="upload-icon">📷</div>
+      <div class="upload-label">
+        <strong>TAP TO TAKE / CHOOSE PHOTO</strong>
+        Camera or photo library
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch mode upload -->
+  <div id="batchUpload" class="hidden">
+    <div class="upload-zone" id="batchAddZone">
+      <input type="file" accept="image/*" id="batchFileInput" multiple>
+      <div class="upload-icon">📷</div>
+      <div class="upload-label">
+        <strong>TAP TO ADD PHOTOS</strong>
+        <span id="batchAddHint">Select up to 20 photos</span>
+      </div>
+    </div>
+    <div id="batchQueue" class="batch-queue" style="margin-top:12px"></div>
+  </div>
+
+  <!-- Preview (single mode) -->
   <div id="preview-wrap">
     <canvas id="canvas"></canvas>
     <div class="preview-label">PREVIEW</div>
   </div>
-  <button class="btn btn-primary" id="saveBtn" disabled>💾  SAVE LABELED PHOTO</button>
-  <button class="btn btn-secondary" id="resetBtn">CLEAR / NEW PHOTO</button>
-  <div class="save-note">
+
+  <!-- Batch progress -->
+  <div class="batch-progress" id="batchProgress">
+    <div class="prog-title" id="progTitle">Processing...</div>
+    <div class="prog-sub" id="progSub"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <button class="btn btn-primary" id="saveBtn" disabled>SAVE LABELED PHOTO</button>
+  <button class="btn btn-secondary" id="resetBtn">CLEAR / START OVER</button>
+  <div class="save-note" id="saveNote">
     Tap Save → image opens in new tab → <span>long-press → Save to Photos</span>
   </div>
+
 </div>
 <canvas id="offscreen" style="display:none"></canvas>
+
 <script>
-  let imgEl = null, labelColor = '#f0a500', labelPos = 'bottom-center', fontSize = 36, bgOpacity = 0.65;
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-  const offscreen = document.getElementById('offscreen');
-  const octx = offscreen.getContext('2d');
+// State
+let mode = 'single';
+let imgEl = null;
+let labelColor = '#f0a500';
+let labelPos = 'bottom-center';
+let fontSize = 36;
+let bgOpacity = 0.65;
+let batchFiles = [];
 
-  document.getElementById('fileInput').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const img = new Image();
-      img.onload = () => { imgEl = img; document.getElementById('preview-wrap').style.display = 'block'; document.getElementById('saveBtn').disabled = false; render(); };
-      img.src = ev.target.result;
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const offscreen = document.getElementById('offscreen');
+const octx = offscreen.getContext('2d');
+
+// Mode toggle
+document.getElementById('modeSingle').addEventListener('click', () => setMode('single'));
+document.getElementById('modeBatch').addEventListener('click', () => setMode('batch'));
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeSingle').classList.toggle('active', m === 'single');
+  document.getElementById('modeBatch').classList.toggle('active', m === 'batch');
+  document.getElementById('singleUpload').classList.toggle('hidden', m !== 'single');
+  document.getElementById('batchUpload').classList.toggle('hidden', m !== 'batch');
+  document.getElementById('subLabelWrap').classList.toggle('hidden', m !== 'single');
+  document.getElementById('batchCountWrap').classList.toggle('hidden', m !== 'batch');
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('saveNote').innerHTML = m === 'single'
+    ? 'Tap Save → image opens in new tab → <span>long-press → Save to Photos</span>'
+    : 'All photos will open in new tabs → <span>long-press each → Save to Photos</span>';
+  if (m === 'batch') {
+    document.getElementById('saveBtn').textContent = 'SAVE ALL LABELED PHOTOS';
+  } else {
+    document.getElementById('saveBtn').textContent = 'SAVE LABELED PHOTO';
+  }
+  updateBatchBtn();
+}
+
+// Single file input
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      imgEl = img;
+      document.getElementById('preview-wrap').style.display = 'block';
+      document.getElementById('saveBtn').disabled = false;
+      render();
     };
-    reader.readAsDataURL(file);
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// Batch file input
+document.getElementById('batchFileInput').addEventListener('change', e => {
+  const files = Array.from(e.target.files);
+  files.forEach(f => {
+    if (!batchFiles.find(b => b.name === f.name && b.size === f.size)) {
+      batchFiles.push(f);
+    }
   });
+  e.target.value = '';
+  renderBatchQueue();
+  updateBatchBtn();
+});
 
-  ['mainLabel','subLabel','addTimestamp'].forEach(id => document.getElementById(id).addEventListener('input', render));
-
-  document.querySelectorAll('.pos-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      labelPos = btn.dataset.pos;
-      render();
-    });
+function renderBatchQueue() {
+  const total = parseInt(document.getElementById('batchCount').value) || 5;
+  const container = document.getElementById('batchQueue');
+  container.innerHTML = '';
+  batchFiles.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'queue-item';
+    const label = document.getElementById('mainLabel').value.trim() || 'Photo';
+    div.innerHTML = `
+      <span class="qi-name">${f.name}</span>
+      <span class="qi-badge">${label} - ${i+1} of ${total}</span>
+      <button class="qi-del" data-idx="${i}">x</button>
+    `;
+    container.appendChild(div);
   });
+  document.getElementById('batchAddHint').textContent =
+    batchFiles.length > 0 ? `${batchFiles.length} added - tap to add more` : 'Select multiple photos at once';
+}
 
-  document.querySelectorAll('.color-swatch').forEach(sw => {
-    sw.addEventListener('click', () => {
-      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-      sw.classList.add('active');
-      labelColor = sw.dataset.color;
-      render();
-    });
-  });
-
-  document.getElementById('fontSize').addEventListener('input', function() { fontSize = +this.value; document.getElementById('fontSizeVal').textContent = fontSize; render(); });
-  document.getElementById('bgOpacity').addEventListener('input', function() { bgOpacity = this.value / 100; document.getElementById('bgOpacityVal').textContent = this.value + '%'; render(); });
-
-  function getTimestamp() {
-    const now = new Date();
-    return now.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}) + '  ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+document.getElementById('batchQueue').addEventListener('click', e => {
+  if (e.target.classList.contains('qi-del')) {
+    const idx = parseInt(e.target.dataset.idx);
+    batchFiles.splice(idx, 1);
+    renderBatchQueue();
+    updateBatchBtn();
   }
+});
 
-  function render() {
-    if (!imgEl) return;
-    const W = imgEl.naturalWidth, H = imgEl.naturalHeight;
-    offscreen.width = canvas.width = W;
-    offscreen.height = canvas.height = H;
-    octx.drawImage(imgEl, 0, 0, W, H);
-    const main = document.getElementById('mainLabel').value.trim();
-    const sub = document.getElementById('subLabel').value.trim();
-    const ts = document.getElementById('addTimestamp').checked ? getTimestamp() : '';
-    const lines = [main, sub, ts].filter(Boolean);
-    if (!lines.length) { ctx.drawImage(offscreen, 0, 0); return; }
-    const fs = Math.round(W * (fontSize / 1000));
-    octx.font = `bold ${fs}px monospace`;
-    const lineH = fs * 1.35, pad = fs * 0.6;
-    const totalH = lines.length * lineH + pad * 2;
-    const maxW = Math.max(...lines.map(l => octx.measureText(l).width)) + pad * 2;
-    let x, y, textAlign;
-    const margin = fs * 0.4;
-    if (labelPos.includes('left')) { x = margin; textAlign = 'left'; }
-    else if (labelPos.includes('right')) { x = W - margin; textAlign = 'right'; }
-    else { x = W / 2; textAlign = 'center'; }
-    let boxX = textAlign === 'left' ? margin - pad * 0.5 : textAlign === 'right' ? W - margin - maxW + pad * 0.5 : (W - maxW) / 2;
-    y = labelPos.includes('top') ? margin : H - totalH - margin;
-    octx.save();
-    octx.globalAlpha = bgOpacity;
-    octx.fillStyle = '#000';
-    octx.beginPath();
-    const r = fs * 0.3;
-    octx.moveTo(boxX+r,y); octx.lineTo(boxX+maxW-r,y); octx.quadraticCurveTo(boxX+maxW,y,boxX+maxW,y+r);
-    octx.lineTo(boxX+maxW,y+totalH-r); octx.quadraticCurveTo(boxX+maxW,y+totalH,boxX+maxW-r,y+totalH);
-    octx.lineTo(boxX+r,y+totalH); octx.quadraticCurveTo(boxX,y+totalH,boxX,y+totalH-r);
-    octx.lineTo(boxX,y+r); octx.quadraticCurveTo(boxX,y,boxX+r,y); octx.closePath();
-    octx.fill(); octx.restore();
-    octx.textAlign = textAlign; octx.textBaseline = 'top';
-    lines.forEach((line, i) => {
-      const ty = y + pad + i * lineH;
-      if (i === 0 && line === main) { octx.font = `bold ${fs}px monospace`; octx.fillStyle = labelColor; }
-      else if (line === sub) { octx.font = `${Math.round(fs*0.78)}px monospace`; octx.fillStyle = labelColor+'cc'; }
-      else { octx.font = `${Math.round(fs*0.62)}px monospace`; octx.fillStyle = '#aaa'; }
-      octx.shadowColor = 'rgba(0,0,0,0.9)'; octx.shadowBlur = 4;
-      octx.fillText(line, x, ty); octx.shadowBlur = 0;
-    });
-    ctx.drawImage(offscreen, 0, 0);
+function updateBatchBtn() {
+  if (mode === 'batch') {
+    document.getElementById('saveBtn').disabled = batchFiles.length === 0;
   }
+}
 
-  document.getElementById('saveBtn').addEventListener('click', () => {
-    if (!imgEl) return;
+// Label inputs re-render
+['mainLabel','subLabel','addTimestamp'].forEach(id =>
+  document.getElementById(id).addEventListener('input', () => {
     render();
-    offscreen.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-    }, 'image/jpeg', 0.95);
-  });
+    if (mode === 'batch') renderBatchQueue();
+  })
+);
 
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    imgEl = null;
-    document.getElementById('preview-wrap').style.display = 'none';
-    document.getElementById('saveBtn').disabled = true;
-    document.getElementById('fileInput').value = '';
-    document.getElementById('mainLabel').value = '';
-    document.getElementById('subLabel').value = '';
+document.getElementById('batchCount').addEventListener('input', renderBatchQueue);
+
+// Position
+document.querySelectorAll('.pos-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    labelPos = btn.dataset.pos;
+    render();
   });
+});
+
+// Color
+document.querySelectorAll('.color-swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+    labelColor = sw.dataset.color;
+    render();
+  });
+});
+
+// Sliders
+document.getElementById('fontSize').addEventListener('input', function() {
+  fontSize = +this.value;
+  document.getElementById('fontSizeVal').textContent = fontSize;
+  render();
+});
+document.getElementById('bgOpacity').addEventListener('input', function() {
+  bgOpacity = this.value / 100;
+  document.getElementById('bgOpacityVal').textContent = this.value + '%';
+  render();
+});
+
+function getTimestamp() {
+  const now = new Date();
+  return now.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'})
+    + '  ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+}
+
+function drawLabel(dc, W, H, lines) {
+  const fs = Math.round(W * (fontSize / 1000));
+  dc.font = `bold ${fs}px monospace`;
+  const lineH = fs * 1.35, pad = fs * 0.6;
+  const totalH = lines.length * lineH + pad * 2;
+  const maxW = Math.max(...lines.map(l => dc.measureText(l.text).width)) + pad * 2;
+  let x, textAlign;
+  const margin = fs * 0.4;
+  if (labelPos.includes('left')) { x = margin; textAlign = 'left'; }
+  else if (labelPos.includes('right')) { x = W - margin; textAlign = 'right'; }
+  else { x = W / 2; textAlign = 'center'; }
+  let boxX = textAlign === 'left' ? margin - pad * 0.5
+    : textAlign === 'right' ? W - margin - maxW + pad * 0.5
+    : (W - maxW) / 2;
+  const y = labelPos.includes('top') ? margin : H - totalH - margin;
+  dc.save();
+  dc.globalAlpha = bgOpacity;
+  dc.fillStyle = '#000';
+  dc.beginPath();
+  const r = fs * 0.3;
+  dc.moveTo(boxX+r,y); dc.lineTo(boxX+maxW-r,y);
+  dc.quadraticCurveTo(boxX+maxW,y,boxX+maxW,y+r);
+  dc.lineTo(boxX+maxW,y+totalH-r);
+  dc.quadraticCurveTo(boxX+maxW,y+totalH,boxX+maxW-r,y+totalH);
+  dc.lineTo(boxX+r,y+totalH);
+  dc.quadraticCurveTo(boxX,y+totalH,boxX,y+totalH-r);
+  dc.lineTo(boxX,y+r);
+  dc.quadraticCurveTo(boxX,y,boxX+r,y);
+  dc.closePath();
+  dc.fill();
+  dc.restore();
+  dc.textAlign = textAlign;
+  dc.textBaseline = 'top';
+  lines.forEach((line, i) => {
+    const ty = y + pad + i * lineH;
+    if (line.type === 'main') {
+      dc.font = `bold ${fs}px monospace`;
+      dc.fillStyle = labelColor;
+    } else if (line.type === 'sub') {
+      dc.font = `${Math.round(fs*0.78)}px monospace`;
+      dc.fillStyle = labelColor + 'cc';
+    } else {
+      dc.font = `${Math.round(fs*0.62)}px monospace`;
+      dc.fillStyle = '#aaaaaa';
+    }
+    dc.shadowColor = 'rgba(0,0,0,0.9)';
+    dc.shadowBlur = 4;
+    dc.fillText(line.text, x, ty);
+    dc.shadowBlur = 0;
+  });
+}
+
+function buildLines(overrideMain) {
+  const main = overrideMain || document.getElementById('mainLabel').value.trim();
+  const sub = document.getElementById('subLabel').value.trim();
+  const ts = document.getElementById('addTimestamp').checked ? getTimestamp() : '';
+  const lines = [];
+  if (main) lines.push({text: main, type: 'main'});
+  if (sub)  lines.push({text: sub,  type: 'sub'});
+  if (ts)   lines.push({text: ts,   type: 'ts'});
+  return lines;
+}
+
+function render() {
+  if (!imgEl || mode !== 'single') return;
+  const W = imgEl.naturalWidth, H = imgEl.naturalHeight;
+  offscreen.width = canvas.width = W;
+  offscreen.height = canvas.height = H;
+  octx.drawImage(imgEl, 0, 0, W, H);
+  const lines = buildLines();
+  if (lines.length) drawLabel(octx, W, H, lines);
+  ctx.drawImage(offscreen, 0, 0);
+}
+
+// Save single
+function saveSingle() {
+  if (!imgEl) return;
+  render();
+  offscreen.toBlob(blob => {
+    window.open(URL.createObjectURL(blob), '_blank');
+  }, 'image/jpeg', 0.95);
+}
+
+// Save batch
+async function saveBatch() {
+  if (batchFiles.length === 0) return;
+  const total = parseInt(document.getElementById('batchCount').value) || batchFiles.length;
+  const groupName = document.getElementById('mainLabel').value.trim() || 'Photo';
+  const prog = document.getElementById('batchProgress');
+  const progTitle = document.getElementById('progTitle');
+  const progSub = document.getElementById('progSub');
+  const bar = document.getElementById('progressBar');
+  prog.style.display = 'block';
+  document.getElementById('saveBtn').disabled = true;
+
+  for (let i = 0; i < batchFiles.length; i++) {
+    const file = batchFiles[i];
+    const num = i + 1;
+    progTitle.textContent = `SAVING ${num} OF ${batchFiles.length}`;
+    progSub.textContent = file.name;
+    bar.style.width = ((num / batchFiles.length) * 100) + '%';
+
+    await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const W = img.naturalWidth, H = img.naturalHeight;
+          offscreen.width = W; offscreen.height = H;
+          octx.drawImage(img, 0, 0, W, H);
+          const mainText = `${groupName} - ${num} of ${total}`;
+          const lines = buildLines(mainText);
+          if (lines.length) drawLabel(octx, W, H, lines);
+          offscreen.toBlob(blob => {
+            setTimeout(() => {
+              window.open(URL.createObjectURL(blob), '_blank');
+              resolve();
+            }, i * 600);
+          }, 'image/jpeg', 0.95);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  progTitle.textContent = 'ALL DONE!';
+  progSub.textContent = `${batchFiles.length} photos processed - long-press each tab to save`;
+  bar.style.width = '100%';
+  document.getElementById('saveBtn').disabled = false;
+}
+
+document.getElementById('saveBtn').addEventListener('click', () => {
+  if (mode === 'single') saveSingle();
+  else saveBatch();
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  imgEl = null;
+  batchFiles = [];
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('batchFileInput').value = '';
+  document.getElementById('mainLabel').value = '';
+  document.getElementById('subLabel').value = '';
+  document.getElementById('batchQueue').innerHTML = '';
+  document.getElementById('batchProgress').style.display = 'none';
+  document.getElementById('batchAddHint').textContent = 'Select multiple photos at once';
+});
 </script>
 </body>
 </html>
