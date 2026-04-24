@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tool Labeler">
 <title>Tool Photo Labeler</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
@@ -66,6 +69,7 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
 .queue-item .qi-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;padding:0 4px}
 .queue-item .qi-del:hover{color:#ff4444}
 .hidden{display:none}
+.offline-badge{display:none;background:rgba(240,165,0,.15);border:1px solid var(--accent);border-radius:4px;padding:4px 10px;font-size:.6rem;letter-spacing:.15em;color:var(--accent);text-align:center}
 </style>
 </head>
 <body>
@@ -75,7 +79,8 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
 </header>
 <div class="container">
 
-  <!-- Mode selector -->
+  <div class="offline-badge" id="offlineBadge">OFFLINE MODE - FULLY CACHED</div>
+
   <div class="panel">
     <div class="panel-title">Mode</div>
     <div class="mode-tabs">
@@ -84,7 +89,6 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
     </div>
   </div>
 
-  <!-- Label settings -->
   <div class="panel">
     <div class="panel-title">Label</div>
     <div>
@@ -108,7 +112,6 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
     </div>
   </div>
 
-  <!-- Style settings -->
   <div class="panel">
     <div class="panel-title">Label Style</div>
     <div>
@@ -150,7 +153,6 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
     </div>
   </div>
 
-  <!-- Single mode upload -->
   <div id="singleUpload">
     <div class="upload-zone">
       <input type="file" accept="image/*" id="fileInput">
@@ -162,9 +164,8 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
     </div>
   </div>
 
-  <!-- Batch mode upload -->
   <div id="batchUpload" class="hidden">
-    <div class="upload-zone" id="batchAddZone">
+    <div class="upload-zone">
       <input type="file" accept="image/*" id="batchFileInput" multiple>
       <div class="upload-icon">📷</div>
       <div class="upload-label">
@@ -175,13 +176,11 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
     <div id="batchQueue" class="batch-queue" style="margin-top:12px"></div>
   </div>
 
-  <!-- Preview (single mode) -->
   <div id="preview-wrap">
     <canvas id="canvas"></canvas>
     <div class="preview-label">PREVIEW</div>
   </div>
 
-  <!-- Batch progress -->
   <div class="batch-progress" id="batchProgress">
     <div class="prog-title" id="progTitle">Processing...</div>
     <div class="prog-sub" id="progSub"></div>
@@ -190,34 +189,45 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
     </div>
   </div>
 
-  <!-- Actions -->
   <button class="btn btn-primary" id="saveBtn" disabled>SAVE LABELED PHOTO</button>
   <button class="btn btn-secondary" id="resetBtn">CLEAR / START OVER</button>
   <div class="save-note" id="saveNote">
-    Tap Save → image opens in new tab → <span>long-press → Save to Photos</span>
+    Tap Save -> image opens in new tab -> <span>long-press -> Save to Photos</span>
   </div>
 
 </div>
 <canvas id="offscreen" style="display:none"></canvas>
 
 <script>
-// State
-let mode = 'single';
-let imgEl = null;
-let labelColor = '#f0a500';
-let labelPos = 'bottom-center';
-let fontSize = 36;
-let bgOpacity = 0.65;
-let batchFiles = [];
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/tool-labeler/sw.js').then(function() {
+    if (!navigator.onLine) {
+      document.getElementById('offlineBadge').style.display = 'block';
+    }
+  });
+}
+window.addEventListener('offline', function() {
+  document.getElementById('offlineBadge').style.display = 'block';
+});
+window.addEventListener('online', function() {
+  document.getElementById('offlineBadge').style.display = 'none';
+});
 
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const offscreen = document.getElementById('offscreen');
-const octx = offscreen.getContext('2d');
+var mode = 'single';
+var imgEl = null;
+var labelColor = '#f0a500';
+var labelPos = 'bottom-center';
+var fontSize = 36;
+var bgOpacity = 0.65;
+var batchFiles = [];
 
-// Mode toggle
-document.getElementById('modeSingle').addEventListener('click', () => setMode('single'));
-document.getElementById('modeBatch').addEventListener('click', () => setMode('batch'));
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var offscreen = document.getElementById('offscreen');
+var octx = offscreen.getContext('2d');
+
+document.getElementById('modeSingle').addEventListener('click', function() { setMode('single'); });
+document.getElementById('modeBatch').addEventListener('click', function() { setMode('batch'); });
 
 function setMode(m) {
   mode = m;
@@ -229,25 +239,17 @@ function setMode(m) {
   document.getElementById('batchCountWrap').classList.toggle('hidden', m !== 'batch');
   document.getElementById('preview-wrap').style.display = 'none';
   document.getElementById('saveBtn').disabled = true;
-  document.getElementById('saveNote').innerHTML = m === 'single'
-    ? 'Tap Save → image opens in new tab → <span>long-press → Save to Photos</span>'
-    : 'All photos will open in new tabs → <span>long-press each → Save to Photos</span>';
-  if (m === 'batch') {
-    document.getElementById('saveBtn').textContent = 'SAVE ALL LABELED PHOTOS';
-  } else {
-    document.getElementById('saveBtn').textContent = 'SAVE LABELED PHOTO';
-  }
+  document.getElementById('saveBtn').textContent = m === 'batch' ? 'SAVE ALL LABELED PHOTOS' : 'SAVE LABELED PHOTO';
   updateBatchBtn();
 }
 
-// Single file input
-document.getElementById('fileInput').addEventListener('change', e => {
-  const file = e.target.files[0];
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  var file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const img = new Image();
-    img.onload = () => {
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() {
       imgEl = img;
       document.getElementById('preview-wrap').style.display = 'block';
       document.getElementById('saveBtn').disabled = false;
@@ -258,11 +260,10 @@ document.getElementById('fileInput').addEventListener('change', e => {
   reader.readAsDataURL(file);
 });
 
-// Batch file input
-document.getElementById('batchFileInput').addEventListener('change', e => {
-  const files = Array.from(e.target.files);
-  files.forEach(f => {
-    if (!batchFiles.find(b => b.name === f.name && b.size === f.size)) {
+document.getElementById('batchFileInput').addEventListener('change', function(e) {
+  var files = Array.from(e.target.files);
+  files.forEach(function(f) {
+    if (batchFiles.length < 20 && !batchFiles.find(function(b) { return b.name === f.name && b.size === f.size; })) {
       batchFiles.push(f);
     }
   });
@@ -272,70 +273,61 @@ document.getElementById('batchFileInput').addEventListener('change', e => {
 });
 
 function renderBatchQueue() {
-  const total = parseInt(document.getElementById('batchCount').value) || 5;
-  const container = document.getElementById('batchQueue');
+  var total = parseInt(document.getElementById('batchCount').value) || 5;
+  var container = document.getElementById('batchQueue');
   container.innerHTML = '';
-  batchFiles.forEach((f, i) => {
-    const div = document.createElement('div');
+  var groupName = document.getElementById('mainLabel').value.trim() || 'Photo';
+  batchFiles.forEach(function(f, i) {
+    var div = document.createElement('div');
     div.className = 'queue-item';
-    const label = document.getElementById('mainLabel').value.trim() || 'Photo';
-    div.innerHTML = `
-      <span class="qi-name">${f.name}</span>
-      <span class="qi-badge">${label} - ${i+1} of ${total}</span>
-      <button class="qi-del" data-idx="${i}">x</button>
-    `;
+    div.innerHTML = '<span class="qi-name">' + f.name + '</span>'
+      + '<span class="qi-badge">' + groupName + ' - ' + (i+1) + ' of ' + total + '</span>'
+      + '<button class="qi-del" data-idx="' + i + '">x</button>';
     container.appendChild(div);
   });
   document.getElementById('batchAddHint').textContent =
-    batchFiles.length > 0 ? `${batchFiles.length} added - tap to add more` : 'Select multiple photos at once';
+    batchFiles.length > 0 ? batchFiles.length + ' added - tap to add more' : 'Select up to 20 photos';
 }
 
-document.getElementById('batchQueue').addEventListener('click', e => {
+document.getElementById('batchQueue').addEventListener('click', function(e) {
   if (e.target.classList.contains('qi-del')) {
-    const idx = parseInt(e.target.dataset.idx);
-    batchFiles.splice(idx, 1);
+    batchFiles.splice(parseInt(e.target.dataset.idx), 1);
     renderBatchQueue();
     updateBatchBtn();
   }
 });
 
 function updateBatchBtn() {
-  if (mode === 'batch') {
-    document.getElementById('saveBtn').disabled = batchFiles.length === 0;
-  }
+  if (mode === 'batch') document.getElementById('saveBtn').disabled = batchFiles.length === 0;
 }
 
-// Label inputs re-render
-['mainLabel','subLabel','addTimestamp'].forEach(id =>
-  document.getElementById(id).addEventListener('input', () => {
+['mainLabel','subLabel','addTimestamp'].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', function() {
     render();
     if (mode === 'batch') renderBatchQueue();
-  })
-);
+  });
+});
 
 document.getElementById('batchCount').addEventListener('input', renderBatchQueue);
 
-// Position
-document.querySelectorAll('.pos-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+document.querySelectorAll('.pos-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.pos-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     labelPos = btn.dataset.pos;
     render();
   });
 });
 
-// Color
-document.querySelectorAll('.color-swatch').forEach(sw => {
-  sw.addEventListener('click', () => {
-    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+document.querySelectorAll('.color-swatch').forEach(function(sw) {
+  sw.addEventListener('click', function() {
+    document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active'); });
     sw.classList.add('active');
     labelColor = sw.dataset.color;
     render();
   });
 });
 
-// Sliders
 document.getElementById('fontSize').addEventListener('input', function() {
   fontSize = +this.value;
   document.getElementById('fontSizeVal').textContent = fontSize;
@@ -348,31 +340,31 @@ document.getElementById('bgOpacity').addEventListener('input', function() {
 });
 
 function getTimestamp() {
-  const now = new Date();
+  var now = new Date();
   return now.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'})
     + '  ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
 }
 
 function drawLabel(dc, W, H, lines) {
-  const fs = Math.round(W * (fontSize / 1000));
-  dc.font = `bold ${fs}px monospace`;
-  const lineH = fs * 1.35, pad = fs * 0.6;
-  const totalH = lines.length * lineH + pad * 2;
-  const maxW = Math.max(...lines.map(l => dc.measureText(l.text).width)) + pad * 2;
-  let x, textAlign;
-  const margin = fs * 0.4;
+  var fs = Math.round(W * (fontSize / 1000));
+  dc.font = 'bold ' + fs + 'px monospace';
+  var lineH = fs * 1.35, pad = fs * 0.6;
+  var totalH = lines.length * lineH + pad * 2;
+  var maxW = Math.max.apply(null, lines.map(function(l) { return dc.measureText(l.text).width; })) + pad * 2;
+  var x, textAlign;
+  var margin = fs * 0.4;
   if (labelPos.includes('left')) { x = margin; textAlign = 'left'; }
   else if (labelPos.includes('right')) { x = W - margin; textAlign = 'right'; }
   else { x = W / 2; textAlign = 'center'; }
-  let boxX = textAlign === 'left' ? margin - pad * 0.5
+  var boxX = textAlign === 'left' ? margin - pad * 0.5
     : textAlign === 'right' ? W - margin - maxW + pad * 0.5
     : (W - maxW) / 2;
-  const y = labelPos.includes('top') ? margin : H - totalH - margin;
+  var y = labelPos.includes('top') ? margin : H - totalH - margin;
   dc.save();
   dc.globalAlpha = bgOpacity;
   dc.fillStyle = '#000';
   dc.beginPath();
-  const r = fs * 0.3;
+  var r = fs * 0.3;
   dc.moveTo(boxX+r,y); dc.lineTo(boxX+maxW-r,y);
   dc.quadraticCurveTo(boxX+maxW,y,boxX+maxW,y+r);
   dc.lineTo(boxX+maxW,y+totalH-r);
@@ -386,16 +378,16 @@ function drawLabel(dc, W, H, lines) {
   dc.restore();
   dc.textAlign = textAlign;
   dc.textBaseline = 'top';
-  lines.forEach((line, i) => {
-    const ty = y + pad + i * lineH;
+  lines.forEach(function(line, i) {
+    var ty = y + pad + i * lineH;
     if (line.type === 'main') {
-      dc.font = `bold ${fs}px monospace`;
+      dc.font = 'bold ' + fs + 'px monospace';
       dc.fillStyle = labelColor;
     } else if (line.type === 'sub') {
-      dc.font = `${Math.round(fs*0.78)}px monospace`;
+      dc.font = Math.round(fs*0.78) + 'px monospace';
       dc.fillStyle = labelColor + 'cc';
     } else {
-      dc.font = `${Math.round(fs*0.62)}px monospace`;
+      dc.font = Math.round(fs*0.62) + 'px monospace';
       dc.fillStyle = '#aaaaaa';
     }
     dc.shadowColor = 'rgba(0,0,0,0.9)';
@@ -406,10 +398,10 @@ function drawLabel(dc, W, H, lines) {
 }
 
 function buildLines(overrideMain) {
-  const main = overrideMain || document.getElementById('mainLabel').value.trim();
-  const sub = document.getElementById('subLabel').value.trim();
-  const ts = document.getElementById('addTimestamp').checked ? getTimestamp() : '';
-  const lines = [];
+  var main = overrideMain || document.getElementById('mainLabel').value.trim();
+  var sub = document.getElementById('subLabel').value.trim();
+  var ts = document.getElementById('addTimestamp').checked ? getTimestamp() : '';
+  var lines = [];
   if (main) lines.push({text: main, type: 'main'});
   if (sub)  lines.push({text: sub,  type: 'sub'});
   if (ts)   lines.push({text: ts,   type: 'ts'});
@@ -418,79 +410,77 @@ function buildLines(overrideMain) {
 
 function render() {
   if (!imgEl || mode !== 'single') return;
-  const W = imgEl.naturalWidth, H = imgEl.naturalHeight;
+  var W = imgEl.naturalWidth, H = imgEl.naturalHeight;
   offscreen.width = canvas.width = W;
   offscreen.height = canvas.height = H;
   octx.drawImage(imgEl, 0, 0, W, H);
-  const lines = buildLines();
+  var lines = buildLines();
   if (lines.length) drawLabel(octx, W, H, lines);
   ctx.drawImage(offscreen, 0, 0);
 }
 
-// Save single
 function saveSingle() {
   if (!imgEl) return;
   render();
-  offscreen.toBlob(blob => {
+  offscreen.toBlob(function(blob) {
     window.open(URL.createObjectURL(blob), '_blank');
   }, 'image/jpeg', 0.95);
 }
 
-// Save batch
-async function saveBatch() {
+function saveBatch() {
   if (batchFiles.length === 0) return;
-  const total = parseInt(document.getElementById('batchCount').value) || batchFiles.length;
-  const groupName = document.getElementById('mainLabel').value.trim() || 'Photo';
-  const prog = document.getElementById('batchProgress');
-  const progTitle = document.getElementById('progTitle');
-  const progSub = document.getElementById('progSub');
-  const bar = document.getElementById('progressBar');
+  var total = parseInt(document.getElementById('batchCount').value) || batchFiles.length;
+  var groupName = document.getElementById('mainLabel').value.trim() || 'Photo';
+  var prog = document.getElementById('batchProgress');
+  var progTitle = document.getElementById('progTitle');
+  var progSub = document.getElementById('progSub');
+  var bar = document.getElementById('progressBar');
   prog.style.display = 'block';
   document.getElementById('saveBtn').disabled = true;
 
-  for (let i = 0; i < batchFiles.length; i++) {
-    const file = batchFiles[i];
-    const num = i + 1;
-    progTitle.textContent = `SAVING ${num} OF ${batchFiles.length}`;
+  var i = 0;
+  function processNext() {
+    if (i >= batchFiles.length) {
+      progTitle.textContent = 'ALL DONE!';
+      progSub.textContent = batchFiles.length + ' photos - long-press each tab to save';
+      bar.style.width = '100%';
+      document.getElementById('saveBtn').disabled = false;
+      return;
+    }
+    var file = batchFiles[i];
+    var num = i + 1;
+    progTitle.textContent = 'SAVING ' + num + ' OF ' + batchFiles.length;
     progSub.textContent = file.name;
     bar.style.width = ((num / batchFiles.length) * 100) + '%';
-
-    await new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const img = new Image();
-        img.onload = () => {
-          const W = img.naturalWidth, H = img.naturalHeight;
-          offscreen.width = W; offscreen.height = H;
-          octx.drawImage(img, 0, 0, W, H);
-          const mainText = `${groupName} - ${num} of ${total}`;
-          const lines = buildLines(mainText);
-          if (lines.length) drawLabel(octx, W, H, lines);
-          offscreen.toBlob(blob => {
-            setTimeout(() => {
-              window.open(URL.createObjectURL(blob), '_blank');
-              resolve();
-            }, i * 600);
-          }, 'image/jpeg', 0.95);
-        };
-        img.src = ev.target.result;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() {
+        var W = img.naturalWidth, H = img.naturalHeight;
+        offscreen.width = W; offscreen.height = H;
+        octx.drawImage(img, 0, 0, W, H);
+        var mainText = groupName + ' - ' + num + ' of ' + total;
+        var lines = buildLines(mainText);
+        if (lines.length) drawLabel(octx, W, H, lines);
+        offscreen.toBlob(function(blob) {
+          window.open(URL.createObjectURL(blob), '_blank');
+          i++;
+          setTimeout(processNext, 700);
+        }, 'image/jpeg', 0.95);
       };
-      reader.readAsDataURL(file);
-    });
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
   }
-
-  progTitle.textContent = 'ALL DONE!';
-  progSub.textContent = `${batchFiles.length} photos processed - long-press each tab to save`;
-  bar.style.width = '100%';
-  document.getElementById('saveBtn').disabled = false;
+  processNext();
 }
 
-document.getElementById('saveBtn').addEventListener('click', () => {
+document.getElementById('saveBtn').addEventListener('click', function() {
   if (mode === 'single') saveSingle();
   else saveBatch();
 });
 
-document.getElementById('resetBtn').addEventListener('click', () => {
+document.getElementById('resetBtn').addEventListener('click', function() {
   imgEl = null;
   batchFiles = [];
   document.getElementById('preview-wrap').style.display = 'none';
@@ -501,7 +491,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   document.getElementById('subLabel').value = '';
   document.getElementById('batchQueue').innerHTML = '';
   document.getElementById('batchProgress').style.display = 'none';
-  document.getElementById('batchAddHint').textContent = 'Select multiple photos at once';
+  document.getElementById('batchAddHint').textContent = 'Select up to 20 photos';
 });
 </script>
 </body>
