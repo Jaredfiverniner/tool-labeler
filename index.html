@@ -21,6 +21,677 @@ h1{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.15em;color
 label{font-size:.7rem;color:var(--dim);letter-spacing:.1em;display:block;margin-bottom:4px}
 input[type=text],input[type=number]{width:100%;background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.9rem;padding:10px 12px;outline:none;transition:border-color .2s}
 input[type=text]:focus,input[type=number]:focus{border-color:var(--accent)}
+.well-input-row{display:flex;gap:8px}
+.well-input-row input{flex:1}
+.add-well-btn{background:var(--accent);border:none;border-radius:4px;color:#0d1017;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;padding:0 16px;cursor:pointer;white-space:nowrap;transition:filter .2s}
+.add-well-btn:hover{filter:brightness(1.1)}
+.wells-grid{display:flex;flex-wrap:wrap;gap:8px}
+.well-btn{background:#131720;border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.1em;padding:8px 12px;cursor:pointer;transition:all .15s;position:relative}
+.well-btn:hover{background:rgba(240,165,0,.12)}
+.well-btn.selected{background:rgba(240,165,0,.2);border-color:var(--accent2);color:#fff}
+.well-btn .del-x{display:none;position:absolute;top:-6px;right:-6px;background:#cc2200;color:#fff;border-radius:50%;width:16px;height:16px;font-size:.6rem;line-height:16px;text-align:center;cursor:pointer}
+.well-btn.edit-mode .del-x{display:block}
+.no-wells{font-size:.7rem;color:var(--dim);letter-spacing:.1em;text-align:center;padding:8px 0}
+.edit-wells-btn{background:none;border:none;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.1em;cursor:pointer;text-align:right;padding:0}
+.edit-wells-btn:hover{color:var(--accent)}
+.mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode-btn{background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.1em;padding:10px;cursor:pointer;text-align:center;transition:all .15s}
+.mode-btn.active{border-color:var(--accent);background:rgba(240,165,0,.12);color:var(--accent)}
+.upload-zone{border:2px dashed var(--border);border-radius:6px;padding:24px 16px;text-align:center;cursor:pointer;position:relative;background:var(--panel);transition:border-color .2s}
+.upload-zone:hover{border-color:var(--accent)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:2rem;margin-bottom:6px}
+.upload-label{font-size:.8rem;color:var(--dim);letter-spacing:.1em}
+.upload-label strong{color:var(--accent);display:block;font-size:.95rem;margin-bottom:4px}
+.position-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pos-btn{background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.1em;padding:8px 4px;cursor:pointer;text-align:center;transition:all .15s}
+.pos-btn.active{border-color:var(--accent);background:rgba(240,165,0,.12);color:var(--accent)}
+.color-row{display:flex;gap:8px;flex-wrap:wrap}
+.color-swatch{width:32px;height:32px;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s}
+.color-swatch.active{border-color:var(--accent);transform:scale(1.15)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+.slider-val{font-size:.8rem;color:var(--accent);min-width:36px;text-align:right}
+.toggle-row{display:flex;align-items:center;justify-content:space-between}
+.toggle{position:relative;width:42px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#131720;border:1px solid var(--border);border-radius:11px;cursor:pointer;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;left:3px;top:3px;width:14px;height:14px;background:var(--dim);border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:rgba(240,165,0,.15);border-color:var(--accent)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px);background:var(--accent)}
+#preview-wrap{display:none;border:1px solid var(--border);border-radius:6px;overflow:hidden;background:#000;position:relative}
+#preview-wrap canvas{width:100%;height:auto;display:block}
+.preview-label{position:absolute;top:8px;left:8px;font-size:.6rem;letter-spacing:.15em;color:var(--dim);background:rgba(0,0,0,.6);padding:2px 6px;border-radius:3px}
+.prog-wrap{background:var(--panel);border:1px solid var(--accent);border-radius:6px;padding:14px;text-align:center;display:none}
+.prog-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--accent);letter-spacing:.15em}
+.prog-sub{font-size:.7rem;color:var(--dim);margin-top:4px;letter-spacing:.1em}
+.progress-bar-wrap{background:#131720;border-radius:4px;height:6px;margin-top:10px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .3s}
+.btn{width:100%;padding:14px;border:none;border-radius:5px;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.2em;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d1017}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.btn-secondary{background:transparent;border:1px solid var(--border);color:var(--dim);font-size:.75rem;letter-spacing:.15em;padding:10px;font-family:'Share Tech Mono',monospace}
+.btn-secondary:hover{border-color:var(--accent);color:var(--text)}
+.save-note{font-size:.65rem;color:var(--dim);text-align:center;letter-spacing:.05em;line-height:1.6}
+.save-note span{color:var(--accent)}
+.batch-queue{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.queue-item{background:#131720;border:1px solid var(--border);border-radius:4px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;font-size:.75rem}
+.queue-item .qi-name{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+.queue-item .qi-badge{color:var(--accent);font-size:.65rem;letter-spacing:.1em;white-space:nowrap;margin:0 6px}
+.queue-item .qi-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;padding:0 4px}
+.queue-item .qi-del:hover{color:#ff4444}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>Tool Photo Labeler</h1>
+  <div class="subtitle">OILFIELD DOCUMENTATION TOOL</div>
+</header>
+<div class="container">
+
+  <!-- Wells Panel -->
+  <div class="panel">
+    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>Saved Wells</span>
+      <button class="edit-wells-btn" id="editWellsBtn">EDIT</button>
+    </div>
+    <div class="well-input-row">
+      <input type="text" id="wellNameInput" placeholder="Type well name..." autocomplete="off">
+      <button class="add-well-btn" id="addWellBtn">+ ADD</button>
+    </div>
+    <div class="wells-grid" id="wellsGrid">
+      <div class="no-wells" id="noWells">No wells saved yet - add one above</div>
+    </div>
+  </div>
+
+  <!-- Mode -->
+  <div class="panel">
+    <div class="panel-title">Mode</div>
+    <div class="mode-tabs">
+      <button class="mode-btn active" id="modeSingle">Single Photo</button>
+      <button class="mode-btn" id="modeBatch">Batch Collage</button>
+    </div>
+  </div>
+
+  <!-- Label -->
+  <div class="panel">
+    <div class="panel-title">Label</div>
+    <div>
+      <label>GROUP / TOOL NAME</label>
+      <input type="text" id="mainLabel" placeholder="e.g. Blue stg 6 or tap a well above" autocomplete="off">
+    </div>
+    <div id="subLabelWrap">
+      <label>SECONDARY LINE (optional)</label>
+      <input type="text" id="subLabel" placeholder="e.g. 9,842 FT - BHA RUN 2" autocomplete="off">
+    </div>
+    <div id="batchCountWrap" class="hidden">
+      <label>TOTAL PHOTOS IN GROUP</label>
+      <input type="number" id="batchCount" value="5" min="2" max="20">
+    </div>
+    <div class="toggle-row">
+      <label style="margin:0">ADD TIMESTAMP</label>
+      <label class="toggle">
+        <input type="checkbox" id="addTimestamp" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Style -->
+  <div class="panel">
+    <div class="panel-title">Label Style</div>
+    <div>
+      <label>POSITION</label>
+      <div class="position-grid">
+        <button class="pos-btn" data-pos="top-left">TOP LEFT</button>
+        <button class="pos-btn" data-pos="top-center">TOP CTR</button>
+        <button class="pos-btn" data-pos="top-right">TOP RIGHT</button>
+        <button class="pos-btn" data-pos="bottom-left">BOT LEFT</button>
+        <button class="pos-btn active" data-pos="bottom-center">BOT CTR</button>
+        <button class="pos-btn" data-pos="bottom-right">BOT RIGHT</button>
+      </div>
+    </div>
+    <div>
+      <label>COLOR</label>
+      <div class="color-row">
+        <div class="color-swatch active" data-color="#f0a500" style="background:#f0a500"></div>
+        <div class="color-swatch" data-color="#ffffff" style="background:#ffffff"></div>
+        <div class="color-swatch" data-color="#00ff88" style="background:#00ff88"></div>
+        <div class="color-swatch" data-color="#ff4444" style="background:#ff4444"></div>
+        <div class="color-swatch" data-color="#44aaff" style="background:#44aaff"></div>
+        <div class="color-swatch" data-color="#ffff00" style="background:#ffff00"></div>
+        <div class="color-swatch" data-color="#000000" style="background:#000;border-color:#555"></div>
+      </div>
+    </div>
+    <div>
+      <label>FONT SIZE</label>
+      <div class="slider-row">
+        <input type="range" id="fontSize" min="18" max="72" value="36">
+        <span class="slider-val" id="fontSizeVal">36</span>
+      </div>
+    </div>
+    <div>
+      <label>BG OPACITY</label>
+      <div class="slider-row">
+        <input type="range" id="bgOpacity" min="0" max="100" value="65">
+        <span class="slider-val" id="bgOpacityVal">65%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Single upload -->
+  <div id="singleUpload">
+    <div class="upload-zone">
+      <input type="file" accept="image/*" id="fileInput">
+      <div class="upload-icon">📷</div>
+      <div class="upload-label">
+        <strong>TAP TO TAKE / CHOOSE PHOTO</strong>
+        Camera or photo library
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch upload -->
+  <div id="batchUpload" class="hidden">
+    <div class="upload-zone">
+      <input type="file" accept="image/*" id="batchFileInput" multiple>
+      <div class="upload-icon">📷</div>
+      <div class="upload-label">
+        <strong>TAP TO ADD PHOTOS</strong>
+        <span id="batchAddHint">Select up to 20 photos</span>
+      </div>
+    </div>
+    <div id="batchQueue" class="batch-queue"></div>
+  </div>
+
+  <!-- Single preview -->
+  <div id="preview-wrap">
+    <canvas id="canvas"></canvas>
+    <div class="preview-label">PREVIEW</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-wrap" id="progWrap">
+    <div class="prog-title" id="progTitle">Building...</div>
+    <div class="prog-sub" id="progSub"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="saveBtn" disabled>SAVE LABELED PHOTO</button>
+  <button class="btn btn-secondary" id="resetBtn">CLEAR / START OVER</button>
+  <div class="save-note" id="saveNote">
+    Tap Save -> image opens in new tab -> <span>long-press -> Save to Photos</span>
+  </div>
+
+</div>
+<canvas id="offscreen" style="display:none"></canvas>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/tool-labeler/sw.js');
+}
+
+// ── Wells ─────────────────────────────────────────────────────
+var wells = [];
+var editMode = false;
+var selectedWell = null;
+
+function loadWells() {
+  try {
+    var saved = localStorage.getItem('tl_wells');
+    if (saved) wells = JSON.parse(saved);
+  } catch(e) { wells = []; }
+}
+
+function saveWells() {
+  try { localStorage.setItem('tl_wells', JSON.stringify(wells)); } catch(e) {}
+}
+
+function renderWells() {
+  var grid = document.getElementById('wellsGrid');
+  var noWells = document.getElementById('noWells');
+  grid.innerHTML = '';
+  if (wells.length === 0) {
+    grid.appendChild(noWells);
+    noWells.style.display = 'block';
+    return;
+  }
+  wells.forEach(function(w, i) {
+    var btn = document.createElement('button');
+    btn.className = 'well-btn' + (editMode ? ' edit-mode' : '') + (w === selectedWell ? ' selected' : '');
+    btn.textContent = w;
+    var del = document.createElement('span');
+    del.className = 'del-x';
+    del.textContent = 'x';
+    del.addEventListener('click', function(e) {
+      e.stopPropagation();
+      wells.splice(i, 1);
+      if (selectedWell === w) { selectedWell = null; }
+      saveWells();
+      renderWells();
+    });
+    btn.appendChild(del);
+    btn.addEventListener('click', function() {
+      if (editMode) return;
+      selectedWell = w;
+      document.getElementById('mainLabel').value = w;
+      renderWells();
+      render();
+      if (mode === 'batch') renderBatchQueue();
+    });
+    grid.appendChild(btn);
+  });
+}
+
+document.getElementById('addWellBtn').addEventListener('click', function() {
+  var val = document.getElementById('wellNameInput').value.trim();
+  if (!val) return;
+  if (wells.indexOf(val) === -1) {
+    wells.push(val);
+    saveWells();
+  }
+  document.getElementById('wellNameInput').value = '';
+  renderWells();
+});
+
+document.getElementById('wellNameInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('addWellBtn').click();
+});
+
+document.getElementById('editWellsBtn').addEventListener('click', function() {
+  editMode = !editMode;
+  this.textContent = editMode ? 'DONE' : 'EDIT';
+  renderWells();
+});
+
+// ── Mode ──────────────────────────────────────────────────────
+var mode = 'single';
+var imgEl = null;
+var labelColor = '#f0a500';
+var labelPos = 'bottom-center';
+var fontSize = 36;
+var bgOpacity = 0.65;
+var batchFiles = [];
+
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+var offscreen = document.getElementById('offscreen');
+var octx = offscreen.getContext('2d');
+
+document.getElementById('modeSingle').addEventListener('click', function() { setMode('single'); });
+document.getElementById('modeBatch').addEventListener('click', function() { setMode('batch'); });
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeSingle').classList.toggle('active', m === 'single');
+  document.getElementById('modeBatch').classList.toggle('active', m === 'batch');
+  document.getElementById('singleUpload').classList.toggle('hidden', m !== 'single');
+  document.getElementById('batchUpload').classList.toggle('hidden', m !== 'batch');
+  document.getElementById('subLabelWrap').classList.toggle('hidden', m !== 'single');
+  document.getElementById('batchCountWrap').classList.toggle('hidden', m !== 'batch');
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('saveBtn').textContent = m === 'batch' ? 'BUILD + SAVE COLLAGE' : 'SAVE LABELED PHOTO';
+  document.getElementById('saveNote').innerHTML = m === 'single'
+    ? 'Tap Save -> image opens in new tab -> <span>long-press -> Save to Photos</span>'
+    : 'All photos stitched into ONE collage image -> <span>long-press -> Save to Photos</span>';
+  updateBatchBtn();
+}
+
+// ── File inputs ───────────────────────────────────────────────
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = new Image();
+    img.onload = function() {
+      imgEl = img;
+      document.getElementById('preview-wrap').style.display = 'block';
+      document.getElementById('saveBtn').disabled = false;
+      render();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('batchFileInput').addEventListener('change', function(e) {
+  var files = Array.from(e.target.files);
+  files.forEach(function(f) {
+    if (batchFiles.length < 20 && !batchFiles.find(function(b) { return b.name === f.name && b.size === f.size; })) {
+      batchFiles.push(f);
+    }
+  });
+  e.target.value = '';
+  renderBatchQueue();
+  updateBatchBtn();
+});
+
+function renderBatchQueue() {
+  var total = parseInt(document.getElementById('batchCount').value) || 5;
+  var container = document.getElementById('batchQueue');
+  container.innerHTML = '';
+  var groupName = document.getElementById('mainLabel').value.trim() || 'Photo';
+  batchFiles.forEach(function(f, i) {
+    var div = document.createElement('div');
+    div.className = 'queue-item';
+    div.innerHTML = '<span class="qi-name">' + f.name + '</span>'
+      + '<span class="qi-badge">' + groupName + ' ' + (i+1) + '/' + total + '</span>'
+      + '<button class="qi-del" data-idx="' + i + '">x</button>';
+    container.appendChild(div);
+  });
+  document.getElementById('batchAddHint').textContent =
+    batchFiles.length > 0 ? batchFiles.length + ' added - tap to add more' : 'Select up to 20 photos';
+}
+
+document.getElementById('batchQueue').addEventListener('click', function(e) {
+  if (e.target.classList.contains('qi-del')) {
+    batchFiles.splice(parseInt(e.target.dataset.idx), 1);
+    renderBatchQueue();
+    updateBatchBtn();
+  }
+});
+
+function updateBatchBtn() {
+  if (mode === 'batch') document.getElementById('saveBtn').disabled = batchFiles.length === 0;
+}
+
+['mainLabel','subLabel','addTimestamp'].forEach(function(id) {
+  document.getElementById(id).addEventListener('input', function() {
+    render();
+    if (mode === 'batch') renderBatchQueue();
+  });
+});
+document.getElementById('batchCount').addEventListener('input', renderBatchQueue);
+
+document.querySelectorAll('.pos-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.pos-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    labelPos = btn.dataset.pos;
+    render();
+  });
+});
+
+document.querySelectorAll('.color-swatch').forEach(function(sw) {
+  sw.addEventListener('click', function() {
+    document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active'); });
+    sw.classList.add('active');
+    labelColor = sw.dataset.color;
+    render();
+  });
+});
+
+document.getElementById('fontSize').addEventListener('input', function() {
+  fontSize = +this.value;
+  document.getElementById('fontSizeVal').textContent = fontSize;
+  render();
+});
+document.getElementById('bgOpacity').addEventListener('input', function() {
+  bgOpacity = this.value / 100;
+  document.getElementById('bgOpacityVal').textContent = this.value + '%';
+  render();
+});
+
+// ── Drawing ───────────────────────────────────────────────────
+function getTimestamp() {
+  var now = new Date();
+  return now.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'})
+    + '  ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+}
+
+function drawLabel(dc, W, H, lines) {
+  var fs = Math.round(W * (fontSize / 1000));
+  if (fs < 8) fs = 8;
+  dc.font = 'bold ' + fs + 'px monospace';
+  var lineH = fs * 1.35, pad = fs * 0.5;
+  var totalH = lines.length * lineH + pad * 2;
+  var maxW = Math.max.apply(null, lines.map(function(l) { return dc.measureText(l.text).width; })) + pad * 2;
+  if (maxW > W * 0.98) maxW = W * 0.98;
+  var x, textAlign;
+  var margin = fs * 0.3;
+  if (labelPos.includes('left')) { x = margin; textAlign = 'left'; }
+  else if (labelPos.includes('right')) { x = W - margin; textAlign = 'right'; }
+  else { x = W / 2; textAlign = 'center'; }
+  var boxX = textAlign === 'left' ? margin - pad * 0.3
+    : textAlign === 'right' ? W - margin - maxW + pad * 0.3
+    : (W - maxW) / 2;
+  var y = labelPos.includes('top') ? margin : H - totalH - margin;
+  dc.save();
+  dc.globalAlpha = bgOpacity;
+  dc.fillStyle = '#000';
+  dc.beginPath();
+  var r = fs * 0.25;
+  dc.moveTo(boxX+r,y); dc.lineTo(boxX+maxW-r,y);
+  dc.quadraticCurveTo(boxX+maxW,y,boxX+maxW,y+r);
+  dc.lineTo(boxX+maxW,y+totalH-r);
+  dc.quadraticCurveTo(boxX+maxW,y+totalH,boxX+maxW-r,y+totalH);
+  dc.lineTo(boxX+r,y+totalH);
+  dc.quadraticCurveTo(boxX,y+totalH,boxX,y+totalH-r);
+  dc.lineTo(boxX,y+r);
+  dc.quadraticCurveTo(boxX,y,boxX+r,y);
+  dc.closePath();
+  dc.fill();
+  dc.restore();
+  dc.textAlign = textAlign;
+  dc.textBaseline = 'top';
+  lines.forEach(function(line, i) {
+    var ty = y + pad + i * lineH;
+    if (line.type === 'main') {
+      dc.font = 'bold ' + fs + 'px monospace';
+      dc.fillStyle = labelColor;
+    } else if (line.type === 'sub') {
+      dc.font = Math.round(fs*0.78) + 'px monospace';
+      dc.fillStyle = labelColor + 'cc';
+    } else {
+      dc.font = Math.round(fs*0.62) + 'px monospace';
+      dc.fillStyle = '#aaaaaa';
+    }
+    dc.shadowColor = 'rgba(0,0,0,0.9)';
+    dc.shadowBlur = 3;
+    dc.fillText(line.text, x, ty);
+    dc.shadowBlur = 0;
+  });
+}
+
+function buildLines(overrideMain) {
+  var main = overrideMain || document.getElementById('mainLabel').value.trim();
+  var sub = document.getElementById('subLabel').value.trim();
+  var ts = document.getElementById('addTimestamp').checked ? getTimestamp() : '';
+  var lines = [];
+  if (main) lines.push({text: main, type: 'main'});
+  if (sub)  lines.push({text: sub,  type: 'sub'});
+  if (ts)   lines.push({text: ts,   type: 'ts'});
+  return lines;
+}
+
+function render() {
+  if (!imgEl || mode !== 'single') return;
+  var W = imgEl.naturalWidth, H = imgEl.naturalHeight;
+  offscreen.width = canvas.width = W;
+  offscreen.height = canvas.height = H;
+  octx.drawImage(imgEl, 0, 0, W, H);
+  var lines = buildLines();
+  if (lines.length) drawLabel(octx, W, H, lines);
+  ctx.drawImage(offscreen, 0, 0);
+}
+
+function loadImage(file) {
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() { resolve(img); };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function saveSingle() {
+  if (!imgEl) return;
+  render();
+  offscreen.toBlob(function(blob) {
+    window.open(URL.createObjectURL(blob), '_blank');
+  }, 'image/jpeg', 0.95);
+}
+
+function saveCollage() {
+  if (batchFiles.length === 0) return;
+  var total = parseInt(document.getElementById('batchCount').value) || batchFiles.length;
+  var groupName = document.getElementById('mainLabel').value.trim() || 'Photo';
+  var progWrap = document.getElementById('progWrap');
+  var progTitle = document.getElementById('progTitle');
+  var progSub = document.getElementById('progSub');
+  var bar = document.getElementById('progressBar');
+  progWrap.style.display = 'block';
+  document.getElementById('saveBtn').disabled = true;
+  progTitle.textContent = 'LOADING PHOTOS...';
+  bar.style.width = '0%';
+
+  var promises = batchFiles.map(function(f) { return loadImage(f); });
+  Promise.all(promises).then(function(images) {
+    progTitle.textContent = 'BUILDING COLLAGE...';
+    var cellW = 1080;
+    var gap = 12;
+
+    var labeled = images.map(function(img, i) {
+      var num = i + 1;
+      var scale = cellW / img.naturalWidth;
+      var cellH = Math.round(img.naturalHeight * scale);
+      var tc = document.createElement('canvas');
+      tc.width = cellW;
+      tc.height = cellH;
+      var tctx = tc.getContext('2d');
+      tctx.drawImage(img, 0, 0, cellW, cellH);
+      var mainText = groupName + ' - ' + num + ' of ' + total;
+      var lines = buildLines(mainText);
+      if (lines.length) drawLabel(tctx, cellW, cellH, lines);
+      bar.style.width = (((i+1) / images.length) * 60) + '%';
+      progSub.textContent = 'Labeled ' + num + ' of ' + images.length;
+      return {canvas: tc, w: cellW, h: cellH};
+    });
+
+    // 2-column grid
+    var rows = [];
+    var i = 0;
+    while (i < labeled.length) {
+      if (i === labeled.length - 1 && labeled.length % 2 !== 0) {
+        rows.push([labeled[i]]); i++;
+      } else {
+        rows.push([labeled[i], labeled[i+1]]); i += 2;
+      }
+    }
+
+    var totalW = cellW * 2 + gap;
+    var headerH = 90;
+    var totalH = headerH + gap;
+    rows.forEach(function(row) {
+      totalH += Math.max.apply(null, row.map(function(c) { return c.h; })) + gap;
+    });
+
+    var collage = document.createElement('canvas');
+    collage.width = totalW;
+    collage.height = totalH;
+    var cctx = collage.getContext('2d');
+
+    cctx.fillStyle = '#111827';
+    cctx.fillRect(0, 0, totalW, totalH);
+
+    // Header
+    var hfs = Math.round(headerH * 0.32);
+    cctx.fillStyle = '#f0a500';
+    cctx.font = 'bold ' + hfs + 'px monospace';
+    cctx.textAlign = 'center';
+    cctx.textBaseline = 'top';
+    cctx.fillText(groupName.toUpperCase(), totalW/2, 12);
+    cctx.fillStyle = '#aaaaaa';
+    cctx.font = Math.round(hfs * 0.72) + 'px monospace';
+    cctx.fillText(images.length + ' PHOTOS  -  ' + getTimestamp(), totalW/2, 12 + hfs + 6);
+
+    // Divider line
+    cctx.fillStyle = '#f0a500';
+    cctx.fillRect(gap, headerH - 4, totalW - gap*2, 2);
+
+    var yOff = headerH + gap;
+    rows.forEach(function(row) {
+      var maxH = Math.max.apply(null, row.map(function(c) { return c.h; }));
+      if (row.length === 1) {
+        var xOff = Math.round((totalW - row[0].w) / 2);
+        cctx.drawImage(row[0].canvas, xOff, yOff);
+      } else {
+        cctx.drawImage(row[0].canvas, 0, yOff);
+        cctx.drawImage(row[1].canvas, cellW + gap, yOff);
+      }
+      yOff += maxH + gap;
+    });
+
+    bar.style.width = '100%';
+    progTitle.textContent = 'COLLAGE READY!';
+    progSub.textContent = 'Opening image - long-press to save to Photos';
+
+    collage.toBlob(function(blob) {
+      window.open(URL.createObjectURL(blob), '_blank');
+      document.getElementById('saveBtn').disabled = false;
+    }, 'image/jpeg', 0.92);
+  });
+}
+
+document.getElementById('saveBtn').addEventListener('click', function() {
+  if (mode === 'single') saveSingle();
+  else saveCollage();
+});
+
+document.getElementById('resetBtn').addEventListener('click', function() {
+  imgEl = null;
+  batchFiles = [];
+  selectedWell = null;
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('batchFileInput').value = '';
+  document.getElementById('mainLabel').value = '';
+  document.getElementById('subLabel').value = '';
+  document.getElementById('batchQueue').innerHTML = '';
+  document.getElementById('progWrap').style.display = 'none';
+  document.getElementById('batchAddHint').textContent = 'Select up to 20 photos';
+  document.getElementById('progressBar').style.width = '0%';
+  renderWells();
+});
+
+// Init
+loadWells();
+renderWells();
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tool Labeler">
+<title>Tool Photo Labeler</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--steel:#1a1f2e;--panel:#222838;--border:#2e3650;--accent:#f0a500;--accent2:#e05c00;--text:#d4dbe8;--dim:#6b7899}
+body{background:var(--steel);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:0 0 60px}
+header{width:100%;background:linear-gradient(135deg,#0d1017,#1a1f2e);border-bottom:2px solid var(--accent);padding:14px 20px 10px;text-align:center}
+h1{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.15em;color:var(--accent)}
+.subtitle{font-size:.65rem;color:var(--dim);letter-spacing:.2em;margin-top:2px}
+.container{width:100%;max-width:520px;padding:20px 16px 0;display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.panel-title{font-size:.65rem;letter-spacing:.25em;color:var(--accent);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px}
+label{font-size:.7rem;color:var(--dim);letter-spacing:.1em;display:block;margin-bottom:4px}
+input[type=text],input[type=number]{width:100%;background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.9rem;padding:10px 12px;outline:none;transition:border-color .2s}
+input[type=text]:focus,input[type=number]:focus{border-color:var(--accent)}
 .mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .mode-btn{background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.75rem;letter-spacing:.1em;padding:10px;cursor:pointer;text-align:center;transition:all .15s}
 .mode-btn.active{border-color:var(--accent);background:rgba(240,165,0,.12);color:var(--accent)}
