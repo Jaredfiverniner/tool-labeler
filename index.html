@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tool Photo Labeler</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --steel: #1a1f2e; --panel: #222838; --border: #2e3650;
+    --accent: #f0a500; --accent2: #e05c00; --text: #d4dbe8; --dim: #6b7899;
+  }
+  body { background: var(--steel); color: var(--text); font-family: 'Share Tech Mono', monospace; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 0 0 40px; }
+  header { width: 100%; background: linear-gradient(135deg, #0d1017 0%, #1a1f2e 100%); border-bottom: 2px solid var(--accent); padding: 14px 20px 10px; text-align: center; }
+  h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.15em; color: var(--accent); }
+  .subtitle { font-size: 0.65rem; color: var(--dim); letter-spacing: 0.2em; margin-top: 2px; }
+  .container { width: 100%; max-width: 520px; padding: 20px 16px 0; display: flex; flex-direction: column; gap: 16px; }
+  .upload-zone { border: 2px dashed var(--border); border-radius: 6px; padding: 28px 16px; text-align: center; cursor: pointer; position: relative; background: var(--panel); }
+  .upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 2.4rem; margin-bottom: 8px; }
+  .upload-label { font-size: 0.8rem; color: var(--dim); letter-spacing: 0.1em; }
+  .upload-label strong { color: var(--accent); display: block; font-size: 1rem; margin-bottom: 4px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .panel-title { font-size: 0.65rem; letter-spacing: 0.25em; color: var(--accent); text-transform: uppercase; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  label { font-size: 0.7rem; color: var(--dim); letter-spacing: 0.1em; display: block; margin-bottom: 4px; }
+  input[type=text] { width: 100%; background: #131720; border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; padding: 10px 12px; outline: none; transition: border-color 0.2s; }
+  input[type=text]:focus { border-color: var(--accent); }
+  .position-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .pos-btn { background: #131720; border: 1px solid var(--border); border-radius: 4px; color: var(--dim); font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; padding: 8px 4px; cursor: pointer; text-align: center; transition: all 0.15s; }
+  .pos-btn.active { border-color: var(--accent); background: rgba(240,165,0,0.12); color: var(--accent); }
+  .color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-swatch { width: 32px; height: 32px; border-radius: 4px; border: 2px solid transparent; cursor: pointer; transition: transform 0.15s, border-color 0.15s; }
+  .color-swatch.active { border-color: var(--accent); transform: scale(1.15); }
+  .slider-row { display: flex; align-items: center; gap: 10px; }
+  input[type=range] { flex: 1; accent-color: var(--accent); height: 4px; }
+  .slider-val { font-size: 0.8rem; color: var(--accent); min-width: 30px; text-align: right; }
+  #preview-wrap { display: none; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: #000; position: relative; }
+  #preview-wrap canvas { width: 100%; height: auto; display: block; }
+  .preview-label { position: absolute; top: 8px; left: 8px; font-size: 0.6rem; letter-spacing: 0.15em; color: var(--dim); background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 3px; }
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 5px; font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.2em; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%); color: #0d1017; }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--dim); font-size: 0.75rem; letter-spacing: 0.15em; padding: 10px; font-family: 'Share Tech Mono', monospace; }
+  .save-note { font-size: 0.65rem; color: var(--dim); text-align: center; letter-spacing: 0.05em; line-height: 1.5; }
+  .save-note span { color: var(--accent); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle { position: relative; width: 42px; height: 22px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: #131720; border: 1px solid var(--border); border-radius: 11px; cursor: pointer; transition: 0.2s; }
+  .toggle-slider::before { content: ''; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; background: var(--dim); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .toggle-slider { background: rgba(240,165,0,0.15); border-color: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚙ Tool Photo Labeler</h1>
+  <div class="subtitle">OILFIELD DOCUMENTATION TOOL</div>
+</header>
+<div class="container">
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" accept="image/*" id="fileInput">
+    <div class="upload-icon">📷</div>
+    <div class="upload-label">
+      <strong>TAP TO TAKE / CHOOSE PHOTO</strong>
+      Camera or photo library
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Label Text</div>
+    <div>
+      <label>MAIN LABEL (tool name / ID)</label>
+      <input type="text" id="mainLabel" placeholder="e.g. MWD TOOL #3 — BHA RUN 2" autocomplete="off">
+    </div>
+    <div>
+      <label>SECONDARY LINE (optional)</label>
+      <input type="text" id="subLabel" placeholder="e.g. 9,842 FT — WELL: JONES 14H" autocomplete="off">
+    </div>
+    <div class="toggle-row">
+      <label style="margin:0">ADD TIMESTAMP</label>
+      <label class="toggle">
+        <input type="checkbox" id="addTimestamp" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Label Style</div>
+    <div>
+      <label>POSITION</label>
+      <div class="position-grid">
+        <button class="pos-btn" data-pos="top-left">↖ TOP LEFT</button>
+        <button class="pos-btn" data-pos="top-center">↑ TOP CTR</button>
+        <button class="pos-btn" data-pos="top-right">↗ TOP RIGHT</button>
+        <button class="pos-btn" data-pos="bottom-left">↙ BOT LEFT</button>
+        <button class="pos-btn active" data-pos="bottom-center">↓ BOT CTR</button>
+        <button class="pos-btn" data-pos="bottom-right">↘ BOT RIGHT</button>
+      </div>
+    </div>
+    <div>
+      <label>LABEL COLOR</label>
+      <div class="color-row">
+        <div class="color-swatch active" data-color="#f0a500" style="background:#f0a500"></div>
+        <div class="color-swatch" data-color="#ffffff" style="background:#ffffff"></div>
+        <div class="color-swatch" data-color="#00ff88" style="background:#00ff88"></div>
+        <div class="color-swatch" data-color="#ff4444" style="background:#ff4444"></div>
+        <div class="color-swatch" data-color="#44aaff" style="background:#44aaff"></div>
+        <div class="color-swatch" data-color="#ffff00" style="background:#ffff00"></div>
+        <div class="color-swatch" data-color="#000000" style="background:#000;border:1px solid #555"></div>
+      </div>
+    </div>
+    <div>
+      <label>FONT SIZE</label>
+      <div class="slider-row">
+        <input type="range" id="fontSize" min="18" max="72" value="36">
+        <span class="slider-val" id="fontSizeVal">36</span>
+      </div>
+    </div>
+    <div>
+      <label>BACKGROUND OPACITY</label>
+      <div class="slider-row">
+        <input type="range" id="bgOpacity" min="0" max="100" value="65">
+        <span class="slider-val" id="bgOpacityVal">65%</span>
+      </div>
+    </div>
+  </div>
+  <div id="preview-wrap">
+    <canvas id="canvas"></canvas>
+    <div class="preview-label">PREVIEW</div>
+  </div>
+  <button class="btn btn-primary" id="saveBtn" disabled>💾  SAVE LABELED PHOTO</button>
+  <button class="btn btn-secondary" id="resetBtn">CLEAR / NEW PHOTO</button>
+  <div class="save-note">
+    Tap Save → image opens in new tab → <span>long-press → Save to Photos</span>
+  </div>
+</div>
+<canvas id="offscreen" style="display:none"></canvas>
+<script>
+  let imgEl = null, labelColor = '#f0a500', labelPos = 'bottom-center', fontSize = 36, bgOpacity = 0.65;
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const offscreen = document.getElementById('offscreen');
+  const octx = offscreen.getContext('2d');
+
+  document.getElementById('fileInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => { imgEl = img; document.getElementById('preview-wrap').style.display = 'block'; document.getElementById('saveBtn').disabled = false; render(); };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  ['mainLabel','subLabel','addTimestamp'].forEach(id => document.getElementById(id).addEventListener('input', render));
+
+  document.querySelectorAll('.pos-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      labelPos = btn.dataset.pos;
+      render();
+    });
+  });
+
+  document.querySelectorAll('.color-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      labelColor = sw.dataset.color;
+      render();
+    });
+  });
+
+  document.getElementById('fontSize').addEventListener('input', function() { fontSize = +this.value; document.getElementById('fontSizeVal').textContent = fontSize; render(); });
+  document.getElementById('bgOpacity').addEventListener('input', function() { bgOpacity = this.value / 100; document.getElementById('bgOpacityVal').textContent = this.value + '%'; render(); });
+
+  function getTimestamp() {
+    const now = new Date();
+    return now.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}) + '  ' + now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+  }
+
+  function render() {
+    if (!imgEl) return;
+    const W = imgEl.naturalWidth, H = imgEl.naturalHeight;
+    offscreen.width = canvas.width = W;
+    offscreen.height = canvas.height = H;
+    octx.drawImage(imgEl, 0, 0, W, H);
+    const main = document.getElementById('mainLabel').value.trim();
+    const sub = document.getElementById('subLabel').value.trim();
+    const ts = document.getElementById('addTimestamp').checked ? getTimestamp() : '';
+    const lines = [main, sub, ts].filter(Boolean);
+    if (!lines.length) { ctx.drawImage(offscreen, 0, 0); return; }
+    const fs = Math.round(W * (fontSize / 1000));
+    octx.font = `bold ${fs}px monospace`;
+    const lineH = fs * 1.35, pad = fs * 0.6;
+    const totalH = lines.length * lineH + pad * 2;
+    const maxW = Math.max(...lines.map(l => octx.measureText(l).width)) + pad * 2;
+    let x, y, textAlign;
+    const margin = fs * 0.4;
+    if (labelPos.includes('left')) { x = margin; textAlign = 'left'; }
+    else if (labelPos.includes('right')) { x = W - margin; textAlign = 'right'; }
+    else { x = W / 2; textAlign = 'center'; }
+    let boxX = textAlign === 'left' ? margin - pad * 0.5 : textAlign === 'right' ? W - margin - maxW + pad * 0.5 : (W - maxW) / 2;
+    y = labelPos.includes('top') ? margin : H - totalH - margin;
+    octx.save();
+    octx.globalAlpha = bgOpacity;
+    octx.fillStyle = '#000';
+    octx.beginPath();
+    const r = fs * 0.3;
+    octx.moveTo(boxX+r,y); octx.lineTo(boxX+maxW-r,y); octx.quadraticCurveTo(boxX+maxW,y,boxX+maxW,y+r);
+    octx.lineTo(boxX+maxW,y+totalH-r); octx.quadraticCurveTo(boxX+maxW,y+totalH,boxX+maxW-r,y+totalH);
+    octx.lineTo(boxX+r,y+totalH); octx.quadraticCurveTo(boxX,y+totalH,boxX,y+totalH-r);
+    octx.lineTo(boxX,y+r); octx.quadraticCurveTo(boxX,y,boxX+r,y); octx.closePath();
+    octx.fill(); octx.restore();
+    octx.textAlign = textAlign; octx.textBaseline = 'top';
+    lines.forEach((line, i) => {
+      const ty = y + pad + i * lineH;
+      if (i === 0 && line === main) { octx.font = `bold ${fs}px monospace`; octx.fillStyle = labelColor; }
+      else if (line === sub) { octx.font = `${Math.round(fs*0.78)}px monospace`; octx.fillStyle = labelColor+'cc'; }
+      else { octx.font = `${Math.round(fs*0.62)}px monospace`; octx.fillStyle = '#aaa'; }
+      octx.shadowColor = 'rgba(0,0,0,0.9)'; octx.shadowBlur = 4;
+      octx.fillText(line, x, ty); octx.shadowBlur = 0;
+    });
+    ctx.drawImage(offscreen, 0, 0);
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    if (!imgEl) return;
+    render();
+    offscreen.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }, 'image/jpeg', 0.95);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    imgEl = null;
+    document.getElementById('preview-wrap').style.display = 'none';
+    document.getElementById('saveBtn').disabled = true;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('mainLabel').value = '';
+    document.getElementById('subLabel').value = '';
+  });
+</script>
+</body>
+</html>
