@@ -62,9 +62,20 @@ input[type=text]:focus,input[type=number]:focus{border-color:var(--accent)}
 .position-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .pos-btn{background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:.1em;padding:8px 4px;cursor:pointer;text-align:center;transition:all .15s}
 .pos-btn.active{border-color:var(--accent);background:rgba(240,165,0,.12);color:var(--accent)}
-.color-row{display:flex;gap:8px;flex-wrap:wrap}
-.color-swatch{width:32px;height:32px;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s}
-.color-swatch.active{border-color:var(--accent);transform:scale(1.15)}
+.color-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.color-swatch{width:36px;height:36px;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s;position:relative;flex-shrink:0}
+.color-swatch.active{border-color:var(--accent);transform:scale(1.1)}
+.color-swatch .c-del{display:none;position:absolute;top:-5px;right:-5px;background:#cc2200;color:#fff;border-radius:50%;width:14px;height:14px;font-size:.55rem;line-height:14px;text-align:center;cursor:pointer}
+.color-swatch:hover .c-del{display:block}
+.color-dropdown-row{display:flex;gap:8px}
+.color-select{flex:1;background:#131720;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.8rem;padding:8px 10px;outline:none;cursor:pointer}
+.color-select:focus{border-color:var(--accent)}
+.add-color-btn{background:var(--accent);border:none;border-radius:4px;color:#0d1017;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;padding:0 14px;cursor:pointer;white-space:nowrap}
+.color-picker-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:6px}
+.cpick{width:100%;aspect-ratio:1;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s}
+.cpick:hover{transform:scale(1.15)}
+.cpick.in-use{border-color:var(--accent)}
+.no-colors{font-size:.7rem;color:var(--dim);letter-spacing:.1em}
 .slider-row{display:flex;align-items:center;gap:10px}
 input[type=range]{flex:1;accent-color:var(--accent);height:4px}
 .slider-val{font-size:.8rem;color:var(--accent);min-width:36px;text-align:right}
@@ -91,6 +102,13 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
 .queue-item .qi-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:1rem;padding:0 4px}
 .queue-item .qi-del:hover{color:#ff4444}
 .hidden{display:none}
+.panel-title{font-size:.65rem;letter-spacing:.25em;color:var(--accent);text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;-webkit-user-select:none}
+.panel-title:hover{color:#ffc040}
+.panel-arrow{font-size:.8rem;transition:transform .2s;display:inline-block}
+.panel-arrow.open{transform:rotate(180deg)}
+.panel-body{display:flex;flex-direction:column;gap:12px;overflow:hidden;transition:max-height .3s ease}
+.panel-body.collapsed{display:none}
+.panel-summary{font-size:.6rem;color:var(--dim);letter-spacing:.08em;margin-left:8px;font-weight:normal;text-transform:none}
 </style>
 </head>
 <body>
@@ -102,106 +120,127 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
 
   <!-- Wells -->
   <div class="panel">
-    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
-      <span>Saved Wells</span>
-      <button class="edit-wells-btn" id="editWellsBtn">EDIT</button>
+    <div class="panel-title" onclick="togglePanel('wellsBody','wellsArrow','tl_open_wells')">
+      <span>Saved Wells <span class="panel-summary" id="wellsSummary"></span></span>
+      <span class="panel-arrow open" id="wellsArrow">▼</span>
     </div>
-    <div class="well-input-row">
-      <input type="text" id="wellNameInput" placeholder="Type well name..." autocomplete="off">
-      <button class="add-well-btn" id="addWellBtn">+ ADD</button>
-    </div>
-    <div class="wells-grid" id="wellsGrid">
-      <div class="no-wells" id="noWells">No wells saved yet - add one above</div>
+    <div class="panel-body" id="wellsBody">
+      <div class="well-input-row">
+        <input type="text" id="wellNameInput" placeholder="Type well name..." autocomplete="off">
+        <button class="add-well-btn" id="addWellBtn">+ ADD</button>
+      </div>
+      <div class="wells-grid" id="wellsGrid">
+        <div class="no-wells" id="noWells">No wells saved yet - add one above</div>
+      </div>
+      <button class="edit-wells-btn" id="editWellsBtn" style="text-align:left">EDIT WELLS</button>
     </div>
   </div>
 
   <!-- Mode -->
   <div class="panel">
-    <div class="panel-title">Mode</div>
-    <div class="mode-tabs">
-      <button class="mode-btn active" id="modeSingle">Single Photo</button>
-      <button class="mode-btn" id="modeBatch">Batch Collage</button>
+    <div class="panel-title" onclick="togglePanel('modeBody','modeArrow','tl_open_mode')">
+      <span>Mode <span class="panel-summary" id="modeSummary"></span></span>
+      <span class="panel-arrow open" id="modeArrow">▼</span>
+    </div>
+    <div class="panel-body" id="modeBody">
+      <div class="mode-tabs">
+        <button class="mode-btn active" id="modeSingle">Single Photo</button>
+        <button class="mode-btn" id="modeBatch">Batch Collage</button>
+      </div>
     </div>
   </div>
 
   <!-- Label -->
   <div class="panel">
-    <div class="panel-title">Label</div>
-    <div>
-      <label>MAIN LABEL (tool name / group)</label>
-      <input type="text" id="mainLabel" placeholder="e.g. Blue stg 6 or tap a well above" autocomplete="off">
+    <div class="panel-title" onclick="togglePanel('labelBody','labelArrow','tl_open_label')">
+      <span>Label <span class="panel-summary" id="labelSummary"></span></span>
+      <span class="panel-arrow open" id="labelArrow">▼</span>
     </div>
-    <div id="subLabelWrap">
-      <label>SECONDARY LINE (optional)</label>
-      <input type="text" id="subLabel" placeholder="e.g. 9,842 FT - BHA RUN 2" autocomplete="off">
-    </div>
-
-
-    <!-- Stage dial -->
-    <div>
-      <div class="stage-toggle-row" style="margin-bottom:8px">
-        <label style="margin:0">STAGE NUMBER</label>
+    <div class="panel-body" id="labelBody">
+      <div>
+        <label>MAIN LABEL (tool name / group)</label>
+        <input type="text" id="mainLabel" placeholder="e.g. Blue stg 6 or tap a well above" autocomplete="off">
+      </div>
+      <div id="subLabelWrap">
+        <label>SECONDARY LINE (optional)</label>
+        <input type="text" id="subLabel" placeholder="e.g. 9,842 FT - BHA RUN 2" autocomplete="off">
+      </div>
+      <div>
+        <div class="stage-toggle-row" style="margin-bottom:8px">
+          <label style="margin:0">STAGE NUMBER</label>
+          <label class="toggle">
+            <input type="checkbox" id="stageToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="stageDialWrap" class="hidden">
+          <div class="stage-controls">
+            <button class="stage-btn" id="stageMinus">-</button>
+            <div class="stage-display" id="stageDisplay">1</div>
+            <button class="stage-btn" id="stagePlus">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <label style="margin:0">ADD TIMESTAMP</label>
         <label class="toggle">
-          <input type="checkbox" id="stageToggle">
+          <input type="checkbox" id="addTimestamp" checked>
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div id="stageDialWrap" class="hidden">
-        <div class="stage-controls">
-          <button class="stage-btn" id="stageMinus">-</button>
-          <div class="stage-display" id="stageDisplay">1</div>
-          <button class="stage-btn" id="stagePlus">+</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="toggle-row">
-      <label style="margin:0">ADD TIMESTAMP</label>
-      <label class="toggle">
-        <input type="checkbox" id="addTimestamp" checked>
-        <span class="toggle-slider"></span>
-      </label>
     </div>
   </div>
 
   <!-- Style -->
   <div class="panel">
-    <div class="panel-title">Label Style</div>
-    <div>
-      <label>POSITION</label>
-      <div class="position-grid">
-        <button class="pos-btn" data-pos="top-left">TOP LEFT</button>
-        <button class="pos-btn" data-pos="top-center">TOP CTR</button>
-        <button class="pos-btn" data-pos="top-right">TOP RIGHT</button>
-        <button class="pos-btn" data-pos="bottom-left">BOT LEFT</button>
-        <button class="pos-btn active" data-pos="bottom-center">BOT CTR</button>
-        <button class="pos-btn" data-pos="bottom-right">BOT RIGHT</button>
-      </div>
+    <div class="panel-title" onclick="togglePanel('styleBody','styleArrow','tl_open_style')">
+      <span>Label Style</span>
+      <span class="panel-arrow open" id="styleArrow">▼</span>
     </div>
-    <div>
-      <label>COLOR</label>
-      <div class="color-row">
-        <div class="color-swatch active" data-color="#f0a500" style="background:#f0a500"></div>
-        <div class="color-swatch" data-color="#ffffff" style="background:#ffffff"></div>
-        <div class="color-swatch" data-color="#00ff88" style="background:#00ff88"></div>
-        <div class="color-swatch" data-color="#ff4444" style="background:#ff4444"></div>
-        <div class="color-swatch" data-color="#44aaff" style="background:#44aaff"></div>
-        <div class="color-swatch" data-color="#ffff00" style="background:#ffff00"></div>
-        <div class="color-swatch" data-color="#000000" style="background:#000;border-color:#555"></div>
+    <div class="panel-body" id="styleBody">
+      <div>
+        <label>POSITION</label>
+        <div class="position-grid">
+          <button class="pos-btn" data-pos="top-left">TOP LEFT</button>
+          <button class="pos-btn" data-pos="top-center">TOP CTR</button>
+          <button class="pos-btn" data-pos="top-right">TOP RIGHT</button>
+          <button class="pos-btn" data-pos="bottom-left">BOT LEFT</button>
+          <button class="pos-btn active" data-pos="bottom-center">BOT CTR</button>
+          <button class="pos-btn" data-pos="bottom-right">BOT RIGHT</button>
+        </div>
       </div>
-    </div>
-    <div>
-      <label>FONT SIZE</label>
-      <div class="slider-row">
-        <input type="range" id="fontSize" min="18" max="72" value="36">
-        <span class="slider-val" id="fontSizeVal">36</span>
+      <div style="position:relative">
+        <label>LABEL COLOR</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="add-color-btn" id="colorPickerBtn" style="flex:1;padding:10px;font-size:.75rem;letter-spacing:.1em;font-family:'Share Tech Mono',monospace;font-weight:normal;display:flex;align-items:center;gap:8px">
+            <span id="colorPickerPreview" style="width:20px;height:20px;border-radius:3px;background:#f0a500;display:inline-block;flex-shrink:0"></span>
+            <span>ADD COLOR</span>
+          </button>
+        </div>
+        <div id="colorPopup" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:999;background:#1a1f2e;border:1px solid var(--accent);border-radius:6px;padding:10px;margin-top:4px;box-shadow:0 4px 20px rgba(0,0,0,0.6)">
+          <div id="colorPickerGrid" style="display:grid;grid-template-columns:repeat(10,32px);gap:5px;justify-content:center"></div>
+          <div style="text-align:right;margin-top:8px">
+            <button onclick="document.getElementById('colorPopup').style.display='none'" style="background:none;border:1px solid var(--border);color:var(--dim);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:4px 10px;border-radius:4px;cursor:pointer">CLOSE</button>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin:10px 0 6px;font-size:.6rem;color:var(--dim);letter-spacing:.1em">ACTIVE COLORS</div>
+        <div class="color-row" id="colorRow">
+          <span class="no-colors" id="noColors">No colors added yet</span>
+        </div>
       </div>
-    </div>
-    <div>
-      <label>BG OPACITY</label>
-      <div class="slider-row">
-        <input type="range" id="bgOpacity" min="0" max="100" value="65">
-        <span class="slider-val" id="bgOpacityVal">65%</span>
+      <div>
+        <label>FONT SIZE</label>
+        <div class="slider-row">
+          <input type="range" id="fontSize" min="18" max="72" value="36">
+          <span class="slider-val" id="fontSizeVal">36</span>
+        </div>
+      </div>
+      <div>
+        <label>BG OPACITY</label>
+        <div class="slider-row">
+          <input type="range" id="bgOpacity" min="0" max="100" value="65">
+          <span class="slider-val" id="bgOpacityVal">65%</span>
+        </div>
       </div>
     </div>
   </div>
@@ -254,6 +293,23 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
 <canvas id="offscreen" style="display:none"></canvas>
 
 <script>
+// ── Collapsible panels ────────────────────────────────────────
+function togglePanel(bodyId, arrowId, storageKey) {
+  var body = document.getElementById(bodyId);
+  var arrow = document.getElementById(arrowId);
+  var isOpen = !body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', isOpen);
+  arrow.classList.toggle('open', !isOpen);
+  try { localStorage.setItem(storageKey, isOpen ? '0' : '1'); } catch(e) {}
+}
+function restorePanel(bodyId, arrowId, storageKey) {
+  var open = localStorage.getItem(storageKey) !== '0';
+  var body = document.getElementById(bodyId);
+  var arrow = document.getElementById(arrowId);
+  body.classList.toggle('collapsed', !open);
+  arrow.classList.toggle('open', open);
+}
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/tool-labeler/sw.js');
 }
@@ -335,12 +391,6 @@ function updateStageDisplay() {
   if (mode === 'batch') renderBatchQueue();
 }
 
-document.getElementById('stageToggle').addEventListener('change', function() {
-  document.getElementById('stageDialWrap').classList.toggle('hidden', !this.checked);
-  render();
-  if (mode === 'batch') renderBatchQueue();
-});
-
 document.getElementById('stagePlus').addEventListener('click', function() {
   stageNum++;
   saveStage();
@@ -377,13 +427,16 @@ holdBtn('stagePlus', function() { stageNum++; saveStage(); updateStageDisplay();
 holdBtn('stageMinus', function() { if (stageNum > 1) { stageNum--; saveStage(); updateStageDisplay(); } });
 
 // ── App state ─────────────────────────────────────────────────
-var mode = 'single';
 var imgEl = null;
-var labelColor = '#f0a500';
-var labelPos = 'bottom-center';
-var fontSize = 36;
-var bgOpacity = 0.65;
 var batchFiles = [];
+
+// Load persisted settings
+var mode = localStorage.getItem('tl_mode') || 'single';
+var labelPos = localStorage.getItem('tl_pos') || 'bottom-center';
+var fontSize = parseInt(localStorage.getItem('tl_fs')) || 36;
+var bgOpacity = parseFloat(localStorage.getItem('tl_bg')) || 0.65;
+var stageToggleOn = localStorage.getItem('tl_stgtoggle') === '1';
+var timestampOn = localStorage.getItem('tl_ts') !== '0';
 
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
@@ -395,12 +448,13 @@ document.getElementById('modeBatch').addEventListener('click', function() { setM
 
 function setMode(m) {
   mode = m;
+  try { localStorage.setItem('tl_mode', m); } catch(e) {}
+  document.getElementById('modeSummary').textContent = m === 'batch' ? '(Batch Collage)' : '(Single Photo)';
   document.getElementById('modeSingle').classList.toggle('active', m === 'single');
   document.getElementById('modeBatch').classList.toggle('active', m === 'batch');
   document.getElementById('singleUpload').classList.toggle('hidden', m !== 'single');
   document.getElementById('batchUpload').classList.toggle('hidden', m !== 'batch');
   document.getElementById('subLabelWrap').classList.toggle('hidden', m !== 'single');
-
   document.getElementById('preview-wrap').style.display = 'none';
   document.getElementById('saveBtn').disabled = true;
   document.getElementById('saveBtn').textContent = m === 'batch' ? 'BUILD + SAVE COLLAGE' : 'SAVE LABELED PHOTO';
@@ -457,7 +511,7 @@ function updateBatchBtn() {
   if (mode === 'batch') document.getElementById('saveBtn').disabled = batchFiles.length === 0;
 }
 
-['mainLabel','subLabel','addTimestamp'].forEach(function(id) {
+['mainLabel','subLabel'].forEach(function(id) {
   document.getElementById(id).addEventListener('input', function() { render(); if (mode === 'batch') renderBatchQueue(); });
 });
 
@@ -467,21 +521,112 @@ document.querySelectorAll('.pos-btn').forEach(function(btn) {
     document.querySelectorAll('.pos-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     labelPos = btn.dataset.pos;
+    try { localStorage.setItem('tl_pos', labelPos); } catch(e) {}
     render();
   });
 });
 
-document.querySelectorAll('.color-swatch').forEach(function(sw) {
-  sw.addEventListener('click', function() {
-    document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active'); });
-    sw.classList.add('active');
-    labelColor = sw.dataset.color;
-    render();
+// ── Colors ────────────────────────────────────────────────────
+var allColors = [
+  '#ff4444','#44aaff','#00cc44','#ffffff','#000000',
+  '#ffff00','#ff6600','#9900cc','#ff69b4','#8B4513',
+  '#f0a500','#ff1493','#00ffff','#39ff14','#adff2f',
+  '#ffd700','#ff7f7f','#cc00ff','#008080','#c0c0c0'
+];
+
+var defaultColors = [
+  '#ff4444','#44aaff','#00cc44','#ffffff','#000000',
+  '#ffff00','#ff6600','#9900cc','#ff69b4','#8B4513',
+  '#f0a500','#ff1493','#00ffff','#39ff14','#adff2f',
+  '#ffd700','#ff7f7f','#cc00ff','#008080','#c0c0c0'
+];
+
+var savedColors = [];
+try { var sc = localStorage.getItem('tl_colors'); if (sc) savedColors = JSON.parse(sc); } catch(e) {}
+if (savedColors.length === 0) { savedColors = defaultColors.slice(); saveColors(); }
+var labelColor = savedColors[0];
+
+function saveColors() {
+  try { localStorage.setItem('tl_colors', JSON.stringify(savedColors)); } catch(e) {}
+}
+
+function renderColorPicker() {
+  var grid = document.getElementById('colorPickerGrid');
+  grid.innerHTML = '';
+  allColors.forEach(function(c) {
+    var sw = document.createElement('div');
+    sw.style.cssText = 'width:32px;height:32px;border-radius:4px;border:2px solid ' + (savedColors.indexOf(c) !== -1 ? 'var(--accent)' : 'transparent') + ';cursor:pointer;background:' + c + ';transition:transform .15s';
+    if (c === '#000000') sw.style.border = '2px solid #555';
+    sw.addEventListener('click', function() {
+      if (savedColors.indexOf(c) === -1) {
+        savedColors.push(c);
+        saveColors();
+      }
+      labelColor = c;
+      document.getElementById('colorPickerPreview').style.background = c;
+      document.getElementById('colorPopup').style.display = 'none';
+      renderColorPicker();
+      renderActiveColors();
+      render();
+    });
+    grid.appendChild(sw);
   });
+}
+
+function renderActiveColors() {
+  var row = document.getElementById('colorRow');
+  row.innerHTML = '';
+  if (savedColors.length === 0) {
+    var nc = document.createElement('span');
+    nc.className = 'no-colors';
+    nc.textContent = 'No colors added yet';
+    row.appendChild(nc);
+    return;
+  }
+  savedColors.forEach(function(c) {
+    var sw = document.createElement('div');
+    sw.className = 'color-swatch' + (c === labelColor ? ' active' : '');
+    sw.style.background = c;
+    if (c === '#000000') sw.style.border = '2px solid #555';
+    var del = document.createElement('span');
+    del.className = 'c-del';
+    del.textContent = 'x';
+    del.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var idx = savedColors.indexOf(c);
+      if (idx !== -1) savedColors.splice(idx, 1);
+      if (labelColor === c) labelColor = savedColors.length > 0 ? savedColors[0] : allColors[0];
+      saveColors();
+      renderColorPicker();
+      renderActiveColors();
+      render();
+    });
+    sw.appendChild(del);
+    sw.addEventListener('click', function() {
+      labelColor = c;
+      document.getElementById('colorPickerPreview').style.background = c;
+      renderActiveColors();
+      render();
+    });
+    row.appendChild(sw);
+  });
+}
+
+document.getElementById('colorPickerBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  var popup = document.getElementById('colorPopup');
+  popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+  if (popup.style.display === 'block') renderColorPicker();
 });
 
-document.getElementById('fontSize').addEventListener('input', function() { fontSize = +this.value; document.getElementById('fontSizeVal').textContent = fontSize; render(); });
-document.getElementById('bgOpacity').addEventListener('input', function() { bgOpacity = this.value / 100; document.getElementById('bgOpacityVal').textContent = this.value + '%'; render(); });
+document.addEventListener('click', function() {
+  document.getElementById('colorPopup').style.display = 'none';
+});
+
+document.getElementById('fontSize').addEventListener('input', function() { fontSize = +this.value; document.getElementById('fontSizeVal').textContent = fontSize; try { localStorage.setItem('tl_fs', fontSize); } catch(e) {} render(); });
+document.getElementById('bgOpacity').addEventListener('input', function() { bgOpacity = this.value / 100; document.getElementById('bgOpacityVal').textContent = this.value + '%'; try { localStorage.setItem('tl_bg', bgOpacity); } catch(e) {} render(); });
+document.getElementById('addTimestamp').addEventListener('change', function() { try { localStorage.setItem('tl_ts', this.checked ? '1' : '0'); } catch(e) {} render(); });
+document.getElementById('stageToggle').addEventListener('change', function() { document.getElementById('stageDialWrap').classList.toggle('hidden', !this.checked); try { localStorage.setItem('tl_stgtoggle', this.checked ? '1' : '0'); } catch(e) {} render(); if (mode === 'batch') renderBatchQueue(); });
 
 // ── Drawing ───────────────────────────────────────────────────
 function getTimestamp() {
@@ -670,7 +815,32 @@ document.getElementById('resetBtn').addEventListener('click', function() {
 // Init
 loadWells();
 renderWells();
+renderColorPicker();
+renderActiveColors();
+document.getElementById('colorPickerPreview').style.background = labelColor;
+
+// Restore panel open/close states
+restorePanel('wellsBody','wellsArrow','tl_open_wells');
+restorePanel('modeBody','modeArrow','tl_open_mode');
+restorePanel('labelBody','labelArrow','tl_open_label');
+restorePanel('styleBody','styleArrow','tl_open_style');
+
+// Restore persisted UI state
+setMode(mode);
+document.querySelectorAll('.pos-btn').forEach(function(b) {
+  b.classList.toggle('active', b.dataset.pos === labelPos);
+});
+document.getElementById('fontSize').value = fontSize;
+document.getElementById('fontSizeVal').textContent = fontSize;
+document.getElementById('bgOpacity').value = Math.round(bgOpacity * 100);
+document.getElementById('bgOpacityVal').textContent = Math.round(bgOpacity * 100) + '%';
+document.getElementById('addTimestamp').checked = timestampOn;
+document.getElementById('stageToggle').checked = stageToggleOn;
+document.getElementById('stageDialWrap').classList.toggle('hidden', !stageToggleOn);
 document.getElementById('stageDisplay').textContent = stageNum;
+
+// Update mode summary
+document.getElementById('modeSummary').textContent = mode === 'batch' ? '(Batch Collage)' : '(Single Photo)';
 </script>
 </body>
 </html>
