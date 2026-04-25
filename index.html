@@ -534,12 +534,7 @@ var allColors = [
   '#ffd700','#ff7f7f','#cc00ff','#008080','#c0c0c0'
 ];
 
-var defaultColors = [
-  '#ff4444','#44aaff','#00cc44','#ffffff','#000000',
-  '#ffff00','#ff6600','#9900cc','#ff69b4','#8B4513',
-  '#f0a500','#ff1493','#00ffff','#39ff14','#adff2f',
-  '#ffd700','#ff7f7f','#cc00ff','#008080','#c0c0c0'
-];
+var defaultColors = ['#ff4444','#44aaff','#ffffff','#00cc44','#f0a500'];
 
 var savedColors = [];
 try { var sc = localStorage.getItem('tl_colors'); if (sc) savedColors = JSON.parse(sc); } catch(e) {}
