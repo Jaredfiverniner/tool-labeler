@@ -135,10 +135,7 @@ input[type=range]{flex:1;accent-color:var(--accent);height:4px}
       <label>SECONDARY LINE (optional)</label>
       <input type="text" id="subLabel" placeholder="e.g. 9,842 FT - BHA RUN 2" autocomplete="off">
     </div>
-    <div id="batchCountWrap" class="hidden">
-      <label>TOTAL PHOTOS IN GROUP</label>
-      <input type="number" id="batchCount" value="5" min="2" max="20">
-    </div>
+
 
     <!-- Stage dial -->
     <div>
@@ -403,7 +400,7 @@ function setMode(m) {
   document.getElementById('singleUpload').classList.toggle('hidden', m !== 'single');
   document.getElementById('batchUpload').classList.toggle('hidden', m !== 'batch');
   document.getElementById('subLabelWrap').classList.toggle('hidden', m !== 'single');
-  document.getElementById('batchCountWrap').classList.toggle('hidden', m !== 'batch');
+
   document.getElementById('preview-wrap').style.display = 'none';
   document.getElementById('saveBtn').disabled = true;
   document.getElementById('saveBtn').textContent = m === 'batch' ? 'BUILD + SAVE COLLAGE' : 'SAVE LABELED PHOTO';
@@ -436,7 +433,7 @@ document.getElementById('batchFileInput').addEventListener('change', function(e)
 });
 
 function renderBatchQueue() {
-  var total = parseInt(document.getElementById('batchCount').value) || 5;
+  var total = batchFiles.length;
   var container = document.getElementById('batchQueue');
   container.innerHTML = '';
   var groupName = document.getElementById('mainLabel').value.trim() || 'Photo';
@@ -463,7 +460,7 @@ function updateBatchBtn() {
 ['mainLabel','subLabel','addTimestamp'].forEach(function(id) {
   document.getElementById(id).addEventListener('input', function() { render(); if (mode === 'batch') renderBatchQueue(); });
 });
-document.getElementById('batchCount').addEventListener('input', renderBatchQueue);
+
 
 document.querySelectorAll('.pos-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
@@ -571,7 +568,7 @@ function saveSingle() {
 
 function saveCollage() {
   if (batchFiles.length === 0) return;
-  var total = parseInt(document.getElementById('batchCount').value) || batchFiles.length;
+  var total = batchFiles.length;
   var groupName = document.getElementById('mainLabel').value.trim() || 'Photo';
   var progWrap = document.getElementById('progWrap');
   var progTitle = document.getElementById('progTitle');
