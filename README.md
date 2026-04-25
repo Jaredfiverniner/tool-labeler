@@ -1,6 +1,6 @@
 # Tool Photo Labeler 🛢️
 
-**"I'm the best there is. Plain and simple."**
+**Because somebody screwed up and now we all gotta take pictures.**
 
 Look, we ain't here to waste time. You got tools going in a hole, you need pictures, and you need those pictures labeled before somebody loses their mind at 2am on location. That's what this does. Simple as that.
 
@@ -69,5 +69,3 @@ Built with plain HTML, CSS, and JavaScript. No frameworks, no dependencies, no n
 ---
 
 *"The new hauler's here and she's a beauty."*
-
-Built for the patch. By someone who's tired of unlabeled photos.
